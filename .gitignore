@@ -10,6 +10,10 @@
 .svn/
 migrate_working_dir/
 
+# Internal private documentation
+.internal/
+CONTEXT.md
+
 # IntelliJ related
 *.iml
 *.ipr
