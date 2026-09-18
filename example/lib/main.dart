@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
@@ -30,42 +29,30 @@ class CampusMapDemoPage extends StatefulWidget {
 }
 
 class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
-  final List<CampusBuilding> _buildings = const [
-    CampusBuilding(
-      id: 't-3',
-      name: 'Edificio T-3',
-      location: LatLng(14.5878, -90.5512),
-      description: 'Facultad de Ingenieria: Escuelas de Mecanica, Civil y Ciencias.',
-    ),
-    CampusBuilding(
-      id: 't-1',
-      name: 'Edificio T-1',
-      location: LatLng(14.5885, -90.5530),
-      description: 'Facultad de Odontologia: Clinicas de atencion dental y aulas.',
-    ),
-    CampusBuilding(
-      id: 's-2',
-      name: 'Edificio S-2',
-      location: LatLng(14.5862, -90.5535),
-      description: 'Facultad de Ciencias Juridicas y Sociales.',
-    ),
-    CampusBuilding(
-      id: 'rectoria',
-      name: 'Edificio de Rectoria',
-      location: LatLng(14.5855, -90.5528),
-      description: 'Administracion Central y oficinas de Consejo Superior Universitario.',
-    ),
-    CampusBuilding(
-      id: 'biblio',
-      name: 'Biblioteca Central',
-      location: LatLng(14.5868, -90.5518),
-      description: 'Acervo bibliografico, salas de estudio y recursos digitales USAC.',
-    ),
-  ];
+  BuildingCategory? _selectedCategory;
+  String _searchQuery = '';
+
+  List<CampusBuilding> get _filteredBuildings {
+    var list = UsacCampusDataset.allBuildings;
+    if (_selectedCategory != null) {
+      list = list.where((b) => b.category == _selectedCategory).toList();
+    }
+    if (_searchQuery.trim().isNotEmpty) {
+      final q = _searchQuery.trim().toLowerCase();
+      list = list.where((b) {
+        final matchesName = b.name.toLowerCase().contains(q);
+        final matchesAcronym = b.acronym?.toLowerCase().contains(q) ?? false;
+        final matchesDesc = b.description.toLowerCase().contains(q);
+        return matchesName || matchesAcronym || matchesDesc;
+      }).toList();
+    }
+    return list;
+  }
 
   void _onBuildingTap(CampusBuilding building) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -77,25 +64,65 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.apartment, color: Color(0xFF002B49), size: 28),
-                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF002B49).withAlpha(25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.account_balance, color: Color(0xFF002B49), size: 28),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      building.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          building.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blueGrey.shade100,
+                            borderRadius: BorderRadius.circular(6),
                           ),
+                          child: Text(
+                            building.category.label,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
                 building.description,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 16),
+              if (building.floors != null) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.layers, size: 18, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Niveles: ${building.floors}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 8),
               Row(
                 children: [
                   const Icon(Icons.pin_drop, size: 18, color: Colors.grey),
@@ -115,6 +142,8 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final buildings = _filteredBuildings;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -122,33 +151,79 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF002B49),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Acerca del Mapa'),
-                  content: const Text(
-                    'Libreria privada de mapa y geolocalizacion desarrollada para Trebol4Devop.\n'
-                    'Proporciona navegacion y ubicacion en tiempo real sobre el campus central de la USAC.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Entendido'),
-                    ),
-                  ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Buscar edificio, sigla (T-3, S-2, Rectoria)...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
-              );
-            },
+              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
+            ),
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          UsacCampusMap(
+            buildings: buildings,
+            onBuildingTap: _onBuildingTap,
+          ),
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  ChoiceChip(
+                    label: const Text('Todos'),
+                    selected: _selectedCategory == null,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedCategory = null;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ...BuildingCategory.values.map(
+                    (cat) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(cat.label),
+                        selected: _selectedCategory == cat,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedCategory = selected ? cat : null;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
-      ),
-      body: UsacCampusMap(
-        buildings: _buildings,
-        onBuildingTap: _onBuildingTap,
       ),
     );
   }

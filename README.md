@@ -1,15 +1,24 @@
 # usac_campus_map
 
-Libreria modular y privada en Flutter para la visualizacion interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC) y el seguimiento de geolocalizacion en tiempo real de estudiantes y visitantes.
+Libreria modular y privada en Flutter para la visualizacion interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC), consulta de puntos de interes (POIs) y seguimiento de geolocalizacion en tiempo real.
 
 ---
 
-## Caracteristicas
+## Caracteristicas Principales
 
-- **Mapa Interactivo Optimizado:** Renderizado de teselas satelitales y vectoriales via OpenStreetMap centradas en las coordenadas del campus central (`14.5866, -90.5524`).
-- **Puntos de Interes (Edificios USAC):** Visualizacion de marcadores de edificios universitarios con soporte de callbacks interactivos (`onBuildingTap`).
-- **Geolocalizacion en Tiempo Real:** Servicio de rastreo continuo con filtrado de distancia (3 metros) y alta precision mediante un `Stream<LatLng>`.
-- **Arquitectura Modular:** Separacion estricta de responsabilidades entre modelos (`src/models`), servicios (`src/services`) y componentes de interfaz (`src/widgets`), accesible mediante un archivo de barril unificado.
+- **Dataset Oficial Exhaustivo (`UsacCampusDataset`):** Mas de 40 puntos estrategicos del Campus Central georreferenciados con alta precision:
+  - Complejo T (T-1 a T-13: Odontologia, Farmacia, Ingenieria, ERIS, Ciencias Fisicas).
+  - Complejo S (S-1 a S-12: Derecho, Economicas, Comunicacion, Trabajo Social, Ciencia Politica, EFPEM, Humanidades, Historia).
+  - Complejo M (M-1 a M-5: Agronomia, Veterinaria, Hospital Veterinario).
+  - Edificios Institucionales (Rectoria General, Bienestar Estudiantil, Auditorio IGLU, SUN, Registro y Estadistica, Centro de Calculo).
+  - Servicios Universitarios y Cultura (Biblioteca Central Cesar Branas, CALUSAC, Editorial Universitaria).
+  - Salud (Centro de Salud Universitario, Clinicas Dentales integrales).
+  - Infraestructura Deportiva (Estadio Revolucion, Piscinas Olimpicas, Polideportivo Central).
+  - Movilidad y Accesos (Estaciones oficiales de parqueo y garitas de control en Periferico, Petapa y San Marcos).
+- **Categorizacion Estructurada (`BuildingCategory`):** Clasificacion por dominios funcionales (facultad, administracion, biblioteca, deportes, alimentacion, parqueo, acceso, salud, academico general) con estandarizacion de colores e iconos.
+- **Consultas y Busqueda Integrada:** Metodos nativos de busqueda en el dataset por nombre, sigla o acronimo (ej. "T-3", "S-2", "RECT"), y filtrado reactivo por categoria.
+- **Seguimiento GPS en Tiempo Real:** Servicio reactivo (`CampusLocationService`) que expone un `Stream<LatLng>` de alta precision y filtro de distancia de 3 metros.
+- **Motor de Renderizado Flexible:** Widget `UsacCampusMap` basado en OpenStreetMap con marcadores configurados por defecto segun la categoria del edificio y soporte de `markerBuilder` personalizable.
 
 ---
 
@@ -22,11 +31,16 @@ graph TD
     subgraph usac_campus_map
         Barrel --> UsacMapWidget["UsacCampusMap (Widget)"]
         Barrel --> BuildingModel["CampusBuilding (Model)"]
+        Barrel --> CategoryEnum["BuildingCategory (Enum)"]
+        Barrel --> Dataset["UsacCampusDataset (Data Catalog)"]
         Barrel --> LocationSvc["CampusLocationService (Service)"]
         
         UsacMapWidget -->|Consume Stream| LocationSvc
+        UsacMapWidget -->|Carga POIs por defecto| Dataset
+        Dataset -->|Instancia| BuildingModel
+        BuildingModel --> CategoryEnum
         UsacMapWidget -->|Renderiza Marcadores| BuildingModel
-        LocationSvc -->|GPS Hardware| GeolocatorPlatform["Geolocator Plugin"]
+        LocationSvc -->|GPS Hardware| GeolocatorPlugin["Geolocator Engine"]
         UsacMapWidget -->|Teselas OpenStreetMap| FlutterMapEngine["FlutterMap Engine"]
     end
 ```
@@ -37,12 +51,37 @@ graph TD
 
 ```mermaid
 classDiagram
+    class BuildingCategory {
+        <<enumeration>>
+        faculty
+        administrative
+        library
+        sports
+        food
+        parking
+        access
+        health
+        generalAcademic
+        +label String
+    }
+
     class CampusBuilding {
         +String id
         +String name
+        +String? acronym
         +LatLng location
         +String description
-        +CampusBuilding(id, name, location, description)
+        +BuildingCategory category
+        +int? floors
+        +CampusBuilding(id, name, location, description, acronym, category, floors)
+    }
+
+    class UsacCampusDataset {
+        +LatLng campusCenter$
+        +List~CampusBuilding~ allBuildings$
+        +getById(String id)$ CampusBuilding?
+        +getByCategory(BuildingCategory category)$ List~CampusBuilding~
+        +search(String query)$ List~CampusBuilding~
     }
 
     class CampusLocationService {
@@ -50,59 +89,25 @@ classDiagram
     }
 
     class UsacCampusMap {
-        +List~CampusBuilding~ buildings
+        +List~CampusBuilding~? buildings
         +Function(CampusBuilding)? onBuildingTap
+        +Widget Function(BuildContext, CampusBuilding)? markerBuilder
+        +LatLng? initialCenter
+        +double initialZoom
         +createState() _UsacCampusMapState
     }
 
-    class _UsacCampusMapState {
-        -MapController _mapController
-        -CampusLocationService _locationService
-        -StreamSubscription~LatLng~? _locationSubscription
-        -LatLng? _currentPosition
-        -LatLng _usacCampusCenter
-        -_initTracking() void
-        +build(BuildContext) Widget
-        +dispose() void
-    }
-
-    UsacCampusMap ..> CampusBuilding : renderiza marcadores
-    _UsacCampusMapState --> CampusLocationService : escucha posicion
-    _UsacCampusMapState --> CampusBuilding : interactua
-```
-
----
-
-## Flujo de Geolocalizacion y Actualizacion
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Estudiante
-    participant UsacCampusMap as UsacCampusMap (Widget)
-    participant LocationService as CampusLocationService
-    participant Hardware as GPS / Dispositivo
-
-    Estudiante->>UsacCampusMap: Abre la vista del mapa
-    UsacCampusMap->>LocationService: Suscripcion a studentPositionStream
-    LocationService->>Hardware: Verifica servicio y permisos de ubicacion
-    alt Permisos concedidos
-        loop Cada cambio de posicion (filtro >= 3m)
-            Hardware-->>LocationService: Geolocator Position
-            LocationService-->>UsacCampusMap: Emite nuevo LatLng
-            UsacCampusMap->>UsacCampusMap: setState() con _currentPosition
-            UsacCampusMap-->>Estudiante: Renderiza marcador de navegacion en el mapa
-        end
-    else Permisos denegados / Servicio desactivado
-        LocationService-->>UsacCampusMap: Cierre del Stream sin emision
-    end
+    CampusBuilding --> BuildingCategory
+    UsacCampusDataset --> CampusBuilding
+    UsacCampusMap ..> CampusBuilding : renderiza
+    UsacCampusMap ..> UsacCampusDataset : dataset por defecto
 ```
 
 ---
 
 ## Instalacion y Configuracion
 
-### 1. Dependencia en `pubspec.yaml`
+### Dependencia en `pubspec.yaml`
 ```yaml
 dependencies:
   usac_campus_map:
@@ -111,10 +116,9 @@ dependencies:
       ref: main
 ```
 
-### 2. Permisos de Plataforma
+### Permisos de Plataforma
 
 #### Android (`android/app/src/main/AndroidManifest.xml`)
-Agrega los permisos de ubicacion dentro de la etiqueta `<manifest>`:
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -122,7 +126,6 @@ Agrega los permisos de ubicacion dentro de la etiqueta `<manifest>`:
 ```
 
 #### iOS (`ios/Runner/Info.plist`)
-Agrega la descripcion de uso de geolocalizacion dentro del bloque `<dict>`:
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>Se requiere acceso a la ubicacion para mostrar tu posicion en el mapa del campus.</string>
@@ -130,55 +133,31 @@ Agrega la descripcion de uso de geolocalizacion dentro del bloque `<dict>`:
 
 ---
 
-## Ejemplo de Uso
-
-Existe una aplicacion de demostracion funcional en el directorio `example/`. Para ejecutarla:
-
-```bash
-cd example
-flutter run
-```
-
-Codigo de integracion basico:
+## Ejemplo de Uso Basico
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
-  runApp(const MaterialApp(home: CampusMapScreen()));
+  runApp(const MaterialApp(home: CampusScreen()));
 }
 
-class CampusMapScreen extends StatelessWidget {
-  const CampusMapScreen({super.key});
+class CampusScreen extends StatelessWidget {
+  const CampusScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final buildings = [
-      const CampusBuilding(
-        id: 't-3',
-        name: 'Edificio T-3 (Facultad de Ingenieria)',
-        location: LatLng(14.5878, -90.5512),
-        description: 'Aulas y laboratorios de Ingenieria Mecanica y Civil.',
-      ),
-      const CampusBuilding(
-        id: 'rectoria',
-        name: 'Edificio de Rectoria',
-        location: LatLng(14.5855, -90.5528),
-        description: 'Edificio Administrativo y Rectoria General USAC.',
-      ),
-    ];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Central USAC'),
       ),
       body: UsacCampusMap(
-        buildings: buildings,
         onBuildingTap: (building) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Seleccionado: ${building.name}')),
+            SnackBar(
+              content: Text('${building.name} - ${building.category.label}'),
+            ),
           );
         },
       ),
@@ -189,21 +168,29 @@ class CampusMapScreen extends StatelessWidget {
 
 ---
 
-## Flujo de Trabajo Git Flow
+## Aplicacion de Demostracion (`example/`)
 
-El repositorio implementa el modelo de ramas Git Flow:
+El repositorio incluye una aplicacion interactiva en el directorio `example/` con barra de busqueda por nombre o sigla (T-3, S-2, Rectoria, etc.), filtros por chip de categoria y modal de informacion detallada.
 
-- **`main`**: Rama protegida de produccion. Contiene versiones consolidadas.
-- **`develop`**: Rama base para el desarrollo continuo e integracion de funcionalidades.
-- **`feature/<nombre>`**: Ramas para desarrollo de modulos individuales nacidas de `develop`.
-- **`bugfix/<nombre>`**: Correcciones controladas integradas a `develop`.
-- **`release/<version>`**: Estabilizacion previa al despliegue en `main`.
-- **`hotfix/<nombre>`**: Correcciones criticas urgentes derivadas de `main`.
+Para ejecutarla en su dispositivo:
+```bash
+cd example
+flutter run
+```
 
-Los mensajes de commit se adhieren estrictamente al estandar de Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
+---
+
+## Modelo Git Flow
+
+- `main`: Rama de produccion y versiones estables.
+- `develop`: Rama principal de integracion y desarrollo.
+- `feature/*`: Ramas de soporte para nuevas funcionalidades.
+- `bugfix/*` / `hotfix/*`: Correcciones controladas.
+- Convencion de commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
 
 ---
 
 ## Licencia y Confidencialidad
 
-Propiedad privada y confidencial de Trebol4Devop. Todos los derechos reservados. Consulte el archivo `LICENSE` para mas detalles.
+Propiedad privada y confidencial de Trebol4Devop. Todos los derechos reservados.
+Consulte el archivo `LICENSE` para conocer las condiciones de uso comercial e interno.
