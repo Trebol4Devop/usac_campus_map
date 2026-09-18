@@ -1,23 +1,23 @@
 # usac_campus_map
 
-Librería modular y privada en Flutter para la visualización interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC) y el seguimiento de geolocalización en tiempo real de estudiantes y visitantes.
+Libreria modular y privada en Flutter para la visualizacion interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC) y el seguimiento de geolocalizacion en tiempo real de estudiantes y visitantes.
 
 ---
 
-## 🏛️ Características
+## Caracteristicas
 
-- **Mapa Interactivo Optimizado:** Renderizado de teselas satelitales/vectoriales vía OpenStreetMap centradas en las coordenadas del campus central (`14.5866, -90.5524`).
-- **Puntos de Interés (Edificios USAC):** Visualización de marcadores de edificios universitarios con soporte de callbacks interactivos (`onBuildingTap`).
-- **Geolocalización en Tiempo Real:** Servicio de rastreo continuo con filtrado de distancia (3 metros) y alta precisión mediante un `Stream<LatLng>`.
-- **Arquitectura Modular:** Separación estricta de responsabilidades entre modelos (`src/models`), servicios (`src/services`) y componentes de interfaz (`src/widgets`), accesible mediante un archivo de barril unificado.
+- **Mapa Interactivo Optimizado:** Renderizado de teselas satelitales y vectoriales via OpenStreetMap centradas en las coordenadas del campus central (`14.5866, -90.5524`).
+- **Puntos de Interes (Edificios USAC):** Visualizacion de marcadores de edificios universitarios con soporte de callbacks interactivos (`onBuildingTap`).
+- **Geolocalizacion en Tiempo Real:** Servicio de rastreo continuo con filtrado de distancia (3 metros) y alta precision mediante un `Stream<LatLng>`.
+- **Arquitectura Modular:** Separacion estricta de responsabilidades entre modelos (`src/models`), servicios (`src/services`) y componentes de interfaz (`src/widgets`), accesible mediante un archivo de barril unificado.
 
 ---
 
-## 📐 Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```mermaid
 graph TD
-    ClientApp["Aplicación Consumidora"] -->|Importa| Barrel["usac_campus_map.dart (Barrel)"]
+    ClientApp["Aplicacion Consumidora"] -->|Importa| Barrel["usac_campus_map.dart (Barrel)"]
     
     subgraph usac_campus_map
         Barrel --> UsacMapWidget["UsacCampusMap (Widget)"]
@@ -33,7 +33,7 @@ graph TD
 
 ---
 
-## 📊 Diagrama de Clases
+## Diagrama de Clases
 
 ```mermaid
 classDiagram
@@ -67,13 +67,13 @@ classDiagram
     }
 
     UsacCampusMap ..> CampusBuilding : renderiza marcadores
-    _UsacCampusMapState --> CampusLocationService : escucha posición
-    _UsacCampusMapState --> CampusBuilding : interactúa
+    _UsacCampusMapState --> CampusLocationService : escucha posicion
+    _UsacCampusMapState --> CampusBuilding : interactua
 ```
 
 ---
 
-## 🔄 Flujo de Geolocalización y Actualización
+## Flujo de Geolocalizacion y Actualizacion
 
 ```mermaid
 sequenceDiagram
@@ -84,23 +84,23 @@ sequenceDiagram
     participant Hardware as GPS / Dispositivo
 
     Estudiante->>UsacCampusMap: Abre la vista del mapa
-    UsacCampusMap->>LocationService: Suscripción a studentPositionStream
-    LocationService->>Hardware: Verifica servicio y permisos de ubicación
+    UsacCampusMap->>LocationService: Suscripcion a studentPositionStream
+    LocationService->>Hardware: Verifica servicio y permisos de ubicacion
     alt Permisos concedidos
-        loop Cada cambio de posición (filtro >= 3m)
+        loop Cada cambio de posicion (filtro >= 3m)
             Hardware-->>LocationService: Geolocator Position
             LocationService-->>UsacCampusMap: Emite nuevo LatLng
             UsacCampusMap->>UsacCampusMap: setState() con _currentPosition
-            UsacCampusMap-->>Estudiante: Renderiza marcador de navegación en el mapa
+            UsacCampusMap-->>Estudiante: Renderiza marcador de navegacion en el mapa
         end
     else Permisos denegados / Servicio desactivado
-        LocationService-->>UsacCampusMap: Cierre del Stream sin emisión
+        LocationService-->>UsacCampusMap: Cierre del Stream sin emision
     end
 ```
 
 ---
 
-## 🚀 Instalación y Configuración
+## Instalacion y Configuracion
 
 ### 1. Dependencia en `pubspec.yaml`
 ```yaml
@@ -114,22 +114,32 @@ dependencies:
 ### 2. Permisos de Plataforma
 
 #### Android (`android/app/src/main/AndroidManifest.xml`)
-Agrega los permisos de ubicación dentro de `<manifest>`:
+Agrega los permisos de ubicacion dentro de la etiqueta `<manifest>`:
 ```xml
+<uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
 #### iOS (`ios/Runner/Info.plist`)
-Agrega las descripciones de uso de geolocalización:
+Agrega la descripcion de uso de geolocalizacion dentro del bloque `<dict>`:
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>Requerimos acceso a tu ubicación para mostrar tu posición dentro del campus universitario.</string>
+<string>Se requiere acceso a la ubicacion para mostrar tu posicion en el mapa del campus.</string>
 ```
 
 ---
 
-## 💻 Ejemplo de Uso
+## Ejemplo de Uso
+
+Existe una aplicacion de demostracion funcional en el directorio `example/`. Para ejecutarla:
+
+```bash
+cd example
+flutter run
+```
+
+Codigo de integracion basico:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -137,18 +147,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: CampusMapScreen(),
-    );
-  }
+  runApp(const MaterialApp(home: CampusMapScreen()));
 }
 
 class CampusMapScreen extends StatelessWidget {
@@ -159,49 +158,27 @@ class CampusMapScreen extends StatelessWidget {
     final buildings = [
       const CampusBuilding(
         id: 't-3',
-        name: 'Edificio T-3 (Facultad de Ingeniería)',
+        name: 'Edificio T-3 (Facultad de Ingenieria)',
         location: LatLng(14.5878, -90.5512),
-        description: 'Aulas y laboratorios de Ingeniería Mecánica y Civil.',
-      ),
-      const CampusBuilding(
-        id: 't-1',
-        name: 'Edificio T-1 (Facultad de Odontología)',
-        location: LatLng(14.5885, -90.5530),
-        description: 'Clínicas odontológicas y aulas magnas.',
+        description: 'Aulas y laboratorios de Ingenieria Mecanica y Civil.',
       ),
       const CampusBuilding(
         id: 'rectoria',
-        name: 'Edificio de Rectoría',
+        name: 'Edificio de Rectoria',
         location: LatLng(14.5855, -90.5528),
-        description: 'Edificio Administrativo y Rectoría General USAC.',
+        description: 'Edificio Administrativo y Rectoria General USAC.',
       ),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Central USAC'),
-        backgroundColor: const Color(0xFF002B49),
       ),
       body: UsacCampusMap(
         buildings: buildings,
         onBuildingTap: (building) {
-          showModalBottomSheet(
-            context: context,
-            builder: (_) => Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    building.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(building.description),
-                ],
-              ),
-            ),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Seleccionado: ${building.name}')),
           );
         },
       ),
@@ -212,14 +189,21 @@ class CampusMapScreen extends StatelessWidget {
 
 ---
 
-## 🌿 Flujo de Trabajo Git Flow
+## Flujo de Trabajo Git Flow
 
-El proyecto sigue una convención estricta basada en Git Flow:
+El repositorio implementa el modelo de ramas Git Flow:
 
-- **`main`**: Rama protegida de producción. Contiene únicamente versiones estables.
-- **`develop`**: Rama base para el desarrollo diario e integración de features.
-- **`feature/*`**: Ramas para el desarrollo de módulos y mejoras individuales.
-- **`bugfix/*` / `hotfix/*`**: Correcciones controladas de errores.
-- **`release/*`**: Preparación y congelamiento de versiones previas a `main`.
+- **`main`**: Rama protegida de produccion. Contiene versiones consolidadas.
+- **`develop`**: Rama base para el desarrollo continuo e integracion de funcionalidades.
+- **`feature/<nombre>`**: Ramas para desarrollo de modulos individuales nacidas de `develop`.
+- **`bugfix/<nombre>`**: Correcciones controladas integradas a `develop`.
+- **`release/<version>`**: Estabilizacion previa al despliegue en `main`.
+- **`hotfix/<nombre>`**: Correcciones criticas urgentes derivadas de `main`.
 
-Los commits deben respetar el estándar de [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
+Los mensajes de commit se adhieren estrictamente al estandar de Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
+
+---
+
+## Licencia y Confidencialidad
+
+Propiedad privada y confidencial de Trebol4Devop. Todos los derechos reservados. Consulte el archivo `LICENSE` para mas detalles.
