@@ -16,6 +16,10 @@ class UsacCampusMap extends StatefulWidget {
   final double initialZoom;
   final bool showCampusBoundary;
   final List<Polygon>? customPolygons;
+  final CameraConstraint? cameraConstraint;
+  final ValueChanged<bool>? onCampusStatusChanged;
+  final bool showOutOfCampusBanner;
+  final String? outOfCampusMessage;
 
   const UsacCampusMap({
     super.key,
@@ -26,6 +30,10 @@ class UsacCampusMap extends StatefulWidget {
     this.initialZoom = 16.5,
     this.showCampusBoundary = true,
     this.customPolygons,
+    this.cameraConstraint,
+    this.onCampusStatusChanged,
+    this.showOutOfCampusBanner = true,
+    this.outOfCampusMessage,
   });
 
   @override
@@ -37,6 +45,8 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   final CampusLocationService _locationService = CampusLocationService();
   StreamSubscription<LatLng>? _locationSubscription;
   LatLng? _currentPosition;
+  bool _isInsideCampus = true;
+  bool _bannerDismissed = false;
 
   @override
   void initState() {
@@ -48,9 +58,18 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     _locationSubscription = _locationService.studentPositionStream.listen(
       (LatLng pos) {
         if (mounted) {
+          final isInside = UsacCampusBoundary.isInsideCampus(pos);
+          final statusChanged = isInside != _isInsideCampus;
           setState(() {
             _currentPosition = pos;
+            _isInsideCampus = isInside;
+            if (statusChanged && isInside) {
+              _bannerDismissed = false;
+            }
           });
+          if (statusChanged) {
+            widget.onCampusStatusChanged?.call(isInside);
+          }
         }
       },
     );
@@ -159,13 +178,17 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   Widget build(BuildContext context) {
     final polygons = _polygons;
 
-    return FlutterMap(
+    final mapWidget = FlutterMap(
       mapController: _mapController,
       options: MapOptions(
         initialCenter: widget.initialCenter ?? UsacCampusDataset.campusCenter,
         initialZoom: widget.initialZoom,
         maxZoom: 19.0,
         minZoom: 14.5,
+        cameraConstraint: widget.cameraConstraint ??
+            CameraConstraint.containCenter(
+              bounds: UsacCampusBoundary.defaultCameraBounds,
+            ),
       ),
       children: [
         TileLayer(
@@ -214,6 +237,70 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
               ),
           ],
         ),
+      ],
+    );
+
+    if (!widget.showOutOfCampusBanner) {
+      return mapWidget;
+    }
+
+    return Stack(
+      children: [
+        Positioned.fill(child: mapWidget),
+        if (_currentPosition != null && !_isInsideCampus && !_bannerDismissed)
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFFFFBEB),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF59E0B), width: 1.2),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFFB45309),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        widget.outOfCampusMessage ??
+                            'No estás en la universidad, pero puedes navegar el mapa con normalidad.',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF78350F),
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _bannerDismissed = true;
+                        });
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Color(0xFF78350F),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -41,7 +41,6 @@ class UsacCampusBoundary {
     LatLng(14.586966, -90.547079),
     LatLng(14.586771, -90.545583),
     LatLng(14.588084, -90.545404),
-    LatLng(14.587883, -90.542938),
     LatLng(14.588282, -90.545378),
     LatLng(14.588516, -90.545344),
     LatLng(14.588619, -90.545329),
@@ -108,6 +107,13 @@ class UsacCampusBoundary {
       color: const Color(0x18002B49),
       borderColor: const Color(0xFF002B49),
       borderStrokeWidth: 2.5,
+    );
+  }
+
+  static LatLngBounds get defaultCameraBounds {
+    return LatLngBounds(
+      const LatLng(14.5750, -90.5630),
+      const LatLng(14.5930, -90.5420),
     );
   }
 }
