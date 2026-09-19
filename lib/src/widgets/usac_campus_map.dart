@@ -14,9 +14,12 @@ class UsacCampusMap extends StatefulWidget {
   final Widget Function(BuildContext, CampusBuilding)? markerBuilder;
   final LatLng? initialCenter;
   final double initialZoom;
+  final double minZoom;
+  final double maxZoom;
   final bool showCampusBoundary;
   final List<Polygon>? customPolygons;
   final CameraConstraint? cameraConstraint;
+  final InteractionOptions? interactionOptions;
   final ValueChanged<bool>? onCampusStatusChanged;
   final bool showOutOfCampusBanner;
   final String? outOfCampusMessage;
@@ -28,9 +31,12 @@ class UsacCampusMap extends StatefulWidget {
     this.markerBuilder,
     this.initialCenter,
     this.initialZoom = 16.5,
+    this.minZoom = 3.0,
+    this.maxZoom = 19.0,
     this.showCampusBoundary = true,
     this.customPolygons,
     this.cameraConstraint,
+    this.interactionOptions,
     this.onCampusStatusChanged,
     this.showOutOfCampusBanner = true,
     this.outOfCampusMessage,
@@ -178,66 +184,77 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   Widget build(BuildContext context) {
     final polygons = _polygons;
 
-    final mapWidget = FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: widget.initialCenter ?? UsacCampusDataset.campusCenter,
-        initialZoom: widget.initialZoom,
-        maxZoom: 19.0,
-        minZoom: 14.5,
-        cameraConstraint: widget.cameraConstraint ??
-            CameraConstraint.containCenter(
-              bounds: UsacCampusBoundary.defaultCameraBounds,
-            ),
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'gt.edu.usac.map',
+    final mapWidget = RepaintBoundary(
+      child: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: widget.initialCenter ?? UsacCampusDataset.campusCenter,
+          initialZoom: widget.initialZoom,
+          maxZoom: widget.maxZoom,
+          minZoom: widget.minZoom,
+          cameraConstraint:
+              widget.cameraConstraint ?? const CameraConstraint.unconstrained(),
+          interactionOptions: widget.interactionOptions ??
+              const InteractionOptions(flags: InteractiveFlag.all),
         ),
-        if (polygons.isNotEmpty)
-          PolygonLayer(
-            polygons: polygons,
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'gt.edu.usac.map',
+            tileDisplay:
+                const TileDisplay.fadeIn(duration: Duration(milliseconds: 120)),
+            keepBuffer: 3,
+            panBuffer: 1,
+            evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
           ),
-        MarkerLayer(
-          markers: [
-            ..._activeBuildings.map(
-              (building) => Marker(
-                point: building.location,
-                width: 36,
-                height: 36,
-                child: widget.markerBuilder?.call(context, building) ??
-                    _buildDefaultMarker(building),
-              ),
+          if (polygons.isNotEmpty)
+            PolygonLayer(
+              polygons: polygons,
             ),
-            if (_currentPosition != null)
-              Marker(
-                point: _currentPosition!,
-                width: 36,
-                height: 36,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.navigation,
-                    color: Colors.white,
-                    size: 18,
+          MarkerLayer(
+            markers: [
+              ..._activeBuildings.map(
+                (building) => Marker(
+                  point: building.location,
+                  width: 36,
+                  height: 36,
+                  child: RepaintBoundary(
+                    child: widget.markerBuilder?.call(context, building) ??
+                        _buildDefaultMarker(building),
                   ),
                 ),
               ),
-          ],
-        ),
-      ],
+              if (_currentPosition != null)
+                Marker(
+                  point: _currentPosition!,
+                  width: 36,
+                  height: 36,
+                  child: RepaintBoundary(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.navigation,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
 
     if (!widget.showOutOfCampusBanner) {
