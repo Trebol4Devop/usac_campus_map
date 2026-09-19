@@ -107,11 +107,16 @@ graph TD
     
     subgraph usac_campus_map
         Barrel --> UsacMapWidget["UsacCampusMap (Widget)"]
+        Barrel --> SearchBarWidget["CampusSearchBar (Widget)"]
+        Barrel --> ChipsWidget["CategoryFilterChips (Widget)"]
+        Barrel --> ModalWidget["BuildingDetailModal (Widget)"]
         Barrel --> BuildingModel["CampusBuilding (Model)"]
         Barrel --> CategoryEnum["BuildingCategory (Enum)"]
         Barrel --> Dataset["UsacCampusDataset (Data Catalog)"]
         Barrel --> Boundary["UsacCampusBoundary (Perimetro)"]
         Barrel --> LocationSvc["CampusLocationService (Service)"]
+        Barrel --> SearchSvc["CampusSearchService (Service)"]
+        Barrel --> DistanceSvc["CampusDistanceService (Service)"]
         
         UsacMapWidget -->|Consume Stream| LocationSvc
         UsacMapWidget -->|Carga POIs por defecto| Dataset
@@ -119,6 +124,8 @@ graph TD
         Dataset -->|Instancia| BuildingModel
         BuildingModel --> CategoryEnum
         UsacMapWidget -->|Renderiza Marcadores| BuildingModel
+        ModalWidget -->|Calcula Metros y Tiempos| DistanceSvc
+        SearchBarWidget -->|Dispara Consultas| SearchSvc
         LocationSvc -->|GPS Hardware| GeolocatorPlugin["Geolocator Engine"]
         UsacMapWidget -->|Teselas OpenStreetMap| FlutterMapEngine["FlutterMap Engine"]
     end
@@ -167,10 +174,24 @@ classDiagram
         +List~LatLng~ campusPerimeter$
         +isInsideCampus(LatLng point)$ bool
         +defaultPerimeterPolygon$ Polygon
+        +defaultCameraBounds$ LatLngBounds
     }
 
     class CampusLocationService {
         +Stream~LatLng~ studentPositionStream
+        +getCurrentPosition() Future~LatLng?~
+    }
+
+    class CampusSearchService {
+        +search(query, category, categories) List~CampusBuilding~
+    }
+
+    class CampusDistanceService {
+        +calculateDistance(point1, point2) double
+        +calculateBuildingDistance(from, building) double
+        +estimateWalkingDuration(distanceMeters) Duration
+        +formatDistance(distanceMeters) String
+        +formatWalkingTime(duration) String
     }
 
     class UsacCampusMap {
@@ -180,8 +201,33 @@ classDiagram
         +LatLng? initialCenter
         +double initialZoom
         +bool showCampusBoundary
-        +List~Polygon~? customPolygons
+        +bool showRecenterCampusButton
+        +bool showLocationButton
+        +bool showZoomButtons
+        +bool enableActiveTracking
+        +MapController? mapController
         +createState() _UsacCampusMapState
+    }
+
+    class CampusSearchBar {
+        +TextEditingController? controller
+        +ValueChanged~String~? onChanged
+        +VoidCallback? onClear
+        +String hintText
+    }
+
+    class CategoryFilterChips {
+        +BuildingCategory? selectedCategory
+        +Set~BuildingCategory~? selectedCategories
+        +ValueChanged~BuildingCategory?~? onCategorySelected
+        +bool isMultiSelect
+    }
+
+    class BuildingDetailModal {
+        +CampusBuilding building
+        +LatLng? referencePosition
+        +VoidCallback? onNavigate
+        +show(context, building, referencePosition, onNavigate)$ Future
     }
 
     CampusBuilding --> BuildingCategory
@@ -189,6 +235,35 @@ classDiagram
     UsacCampusMap ..> UsacCampusBoundary : renderiza perimetro
     UsacCampusMap ..> CampusBuilding : renderiza marcadores
     UsacCampusMap ..> UsacCampusDataset : catalogo oficial
+    BuildingDetailModal ..> CampusBuilding : presenta informacion
+    BuildingDetailModal ..> CampusDistanceService : calcula distancias
+```
+
+---
+
+## Diagrama de Secuencia y Flujo de Datos
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Usuario
+    participant SearchBar as CampusSearchBar
+    participant Chips as CategoryFilterChips
+    participant MapWidget as UsacCampusMap
+    participant SearchService as CampusSearchService
+    participant Modal as BuildingDetailModal
+
+    Usuario->>SearchBar: Ingresa termino de busqueda ("T-3")
+    SearchBar->>SearchService: search(query: "T-3")
+    SearchService-->>Usuario: Lista filtrada de edificios
+    Usuario->>Chips: Selecciona filtro de categoria
+    Chips->>SearchService: search(query: "T-3", category: faculty)
+    SearchService-->>MapWidget: Actualiza marcadores visibles
+    Usuario->>MapWidget: Toca marcador de edificio
+    MapWidget->>Modal: BuildingDetailModal.show(context, building)
+    Modal-->>Usuario: Ficha tecnica con distancias y tiempos a pie
+    Usuario->>MapWidget: Presiona boton flotante "Centrar Campus"
+    MapWidget->>MapWidget: Recentra camara en centroide USAC
 ```
 
 ---
@@ -211,14 +286,25 @@ class CampusScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Central USAC'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: CampusSearchBar(
+            hintText: 'Buscar edificio o facultad...',
+            onChanged: (query) {
+              // Actualizar estado de busqueda
+            },
+          ),
+        ),
       ),
       body: UsacCampusMap(
         showCampusBoundary: true,
+        showRecenterCampusButton: true,
+        showLocationButton: true,
+        showZoomButtons: true,
         onBuildingTap: (building) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${building.name} (${building.acronym ?? ""})'),
-            ),
+          BuildingDetailModal.show(
+            context: context,
+            building: building,
           );
         },
       ),
@@ -231,13 +317,13 @@ class CampusScreen extends StatelessWidget {
 
 ## Aplicacion de Demostracion (`example/`)
 
-El subproyecto en `example/` cuenta con:
-- Buscador reactivo por nombre y acronimo (T-3, S-2, Rectoria, etc.).
-- Selector de categorias mediante chips horizontales.
-- Boton en el AppBar para mostrar u ocultar la capa de perimetro territorial.
-- Ficha modal desplegable con la informacion completa del edificio tocado.
+El subproyecto en `example/` integra todos los componentes de la libreria:
+- `CampusSearchBar`: Buscador interactivo por nombre, acronimo y facultades asociadas.
+- `CategoryFilterChips`: Barra horizontal de seleccion de categorias tematicas.
+- `UsacCampusMap`: Mapa reactivo con controles flotantes de recentrado, ubicacion GPS y zoom.
+- `BuildingDetailModal`: Ficha tecnica desplegable con calculo automatico de distancias Haversine y tiempos de caminata estimados.
 
-Para ejecutarla en su telefono:
+Para ejecutarla en su dispositivo:
 ```bash
 cd example
 flutter run

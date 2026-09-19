@@ -10,8 +10,8 @@ import '../services/location_service.dart';
 
 abstract final class UsacMapTileServers {
   static const String openStreetMap =
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const List<String> defaultSubdomains = ['a', 'b', 'c'];
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static const List<String> defaultSubdomains = [];
 }
 
 class UsacCampusMap extends StatefulWidget {
@@ -38,6 +38,13 @@ class UsacCampusMap extends StatefulWidget {
   final int panBuffer;
   final LatLngBounds? tileBounds;
   final String userAgentPackageName;
+  final MapController? mapController;
+  final bool showRecenterCampusButton;
+  final bool showLocationButton;
+  final bool showZoomButtons;
+  final bool enableActiveTracking;
+  final VoidCallback? onRecenterCampus;
+  final ValueChanged<LatLng>? onUserLocationTap;
 
   const UsacCampusMap({
     super.key,
@@ -64,6 +71,13 @@ class UsacCampusMap extends StatefulWidget {
     this.panBuffer = 0,
     this.tileBounds,
     this.userAgentPackageName = 'gt.edu.usac.map',
+    this.mapController,
+    this.showRecenterCampusButton = true,
+    this.showLocationButton = true,
+    this.showZoomButtons = true,
+    this.enableActiveTracking = false,
+    this.onRecenterCampus,
+    this.onUserLocationTap,
   });
 
   @override
@@ -71,7 +85,9 @@ class UsacCampusMap extends StatefulWidget {
 }
 
 class _UsacCampusMapState extends State<UsacCampusMap> {
-  final MapController _mapController = MapController();
+  MapController? _internalMapController;
+  MapController get _effectiveMapController =>
+      widget.mapController ?? (_internalMapController ??= MapController());
   final CampusLocationService _locationService = CampusLocationService();
   StreamSubscription<LatLng>? _locationSubscription;
   LatLng? _currentPosition;
@@ -97,6 +113,12 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
               _bannerDismissed = false;
             }
           });
+          if (widget.enableActiveTracking) {
+            _effectiveMapController.move(
+              pos,
+              _effectiveMapController.camera.zoom,
+            );
+          }
           if (statusChanged) {
             widget.onCampusStatusChanged?.call(isInside);
           }
@@ -108,7 +130,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   @override
   void dispose() {
     _locationSubscription?.cancel();
-    _mapController.dispose();
+    _internalMapController?.dispose();
     super.dispose();
   }
 
@@ -204,13 +226,81 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     );
   }
 
+  void _zoomIn() {
+    final currentZoom = _effectiveMapController.camera.zoom;
+    if (currentZoom < widget.maxZoom) {
+      final targetZoom =
+          (currentZoom + 1.0).clamp(widget.minZoom, widget.maxZoom);
+      _effectiveMapController.move(
+        _effectiveMapController.camera.center,
+        targetZoom,
+      );
+    }
+  }
+
+  void _zoomOut() {
+    final currentZoom = _effectiveMapController.camera.zoom;
+    if (currentZoom > widget.minZoom) {
+      final targetZoom =
+          (currentZoom - 1.0).clamp(widget.minZoom, widget.maxZoom);
+      _effectiveMapController.move(
+        _effectiveMapController.camera.center,
+        targetZoom,
+      );
+    }
+  }
+
+  void _recenterCampus() {
+    _effectiveMapController.move(
+      widget.initialCenter ?? UsacCampusDataset.campusCenter,
+      widget.initialZoom,
+    );
+    widget.onRecenterCampus?.call();
+  }
+
+  void _goToUserLocation() {
+    if (_currentPosition != null) {
+      _effectiveMapController.move(_currentPosition!, 17.0);
+      widget.onUserLocationTap?.call(_currentPosition!);
+    }
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+    Color? iconColor,
+  }) {
+    return Material(
+      color: Colors.white,
+      elevation: 3,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip,
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: Icon(
+              icon,
+              size: 20,
+              color: iconColor ?? const Color(0xFF002B49),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final polygons = _polygons;
 
     final mapWidget = RepaintBoundary(
       child: FlutterMap(
-        mapController: _mapController,
+        mapController: _effectiveMapController,
         options: MapOptions(
           initialCenter: widget.initialCenter ?? UsacCampusDataset.campusCenter,
           initialZoom: widget.initialZoom,
@@ -287,14 +377,65 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
       ),
     );
 
-    if (!widget.showOutOfCampusBanner) {
+    final hasActiveBanner = widget.showOutOfCampusBanner &&
+        _currentPosition != null &&
+        !_isInsideCampus &&
+        !_bannerDismissed;
+    final showAnyControl = widget.showRecenterCampusButton ||
+        widget.showLocationButton ||
+        widget.showZoomButtons;
+
+    if (!hasActiveBanner && !showAnyControl) {
       return mapWidget;
     }
 
     return Stack(
       children: [
         Positioned.fill(child: mapWidget),
-        if (_currentPosition != null && !_isInsideCampus && !_bannerDismissed)
+        if (showAnyControl)
+          Positioned(
+            right: 16,
+            bottom: hasActiveBanner ? 88 : 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.showZoomButtons) ...[
+                  _buildControlButton(
+                    icon: Icons.add,
+                    onPressed: _zoomIn,
+                    tooltip: 'Acercar',
+                  ),
+                  const SizedBox(height: 6),
+                  _buildControlButton(
+                    icon: Icons.remove,
+                    onPressed: _zoomOut,
+                    tooltip: 'Alejar',
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                if (widget.showRecenterCampusButton) ...[
+                  _buildControlButton(
+                    icon: Icons.account_balance,
+                    onPressed: _recenterCampus,
+                    tooltip: 'Centrar en Campus Central',
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                if (widget.showLocationButton)
+                  _buildControlButton(
+                    icon: _currentPosition != null
+                        ? Icons.my_location
+                        : Icons.location_searching,
+                    onPressed: _goToUserLocation,
+                    tooltip: 'Mi ubicacion',
+                    iconColor: _currentPosition != null
+                        ? Colors.blueAccent
+                        : Colors.grey,
+                  ),
+              ],
+            ),
+          ),
+        if (hasActiveBanner)
           Positioned(
             bottom: 16,
             left: 16,
@@ -304,10 +445,12 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
               borderRadius: BorderRadius.circular(12),
               color: const Color(0xFFFFFBEB),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF59E0B), width: 1.2),
+                  border:
+                      Border.all(color: const Color(0xFFF59E0B), width: 1.2),
                 ),
                 child: Row(
                   children: [
