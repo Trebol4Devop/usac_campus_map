@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
@@ -33,6 +34,8 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
   BuildingCategory? _selectedCategory;
   String _searchQuery = '';
   bool _showBoundary = true;
+  LatLng? _currentUserPosition;
+  CampusBuilding? _navigatingDestination;
 
   List<CampusBuilding> get _filteredBuildings {
     return _searchService.search(
@@ -45,7 +48,13 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
     BuildingDetailModal.show(
       context: context,
       building: building,
-      referencePosition: UsacCampusDataset.campusCenter,
+      referencePosition: _currentUserPosition,
+      onNavigate: () {
+        Navigator.of(context).pop();
+        setState(() {
+          _navigatingDestination = building;
+        });
+      },
     );
   }
 
@@ -91,10 +100,15 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
           UsacCampusMap(
             buildings: buildings,
             showCampusBoundary: _showBoundary,
+            routeDestination: _navigatingDestination,
+            onClearRoute: () => setState(() => _navigatingDestination = null),
             onBuildingTap: _onBuildingTap,
+            onUserLocationTap: (loc) => setState(() => _currentUserPosition = loc),
+            onUserLocationChanged: (loc) =>
+                setState(() => _currentUserPosition = loc),
           ),
           Positioned(
-            top: 10,
+            top: _navigatingDestination != null ? 76 : 10,
             left: 0,
             right: 0,
             child: CategoryFilterChips(

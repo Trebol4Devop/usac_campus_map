@@ -55,5 +55,36 @@ void main() {
       expect(find.text('Facultad de Ingenieria'), findsOneWidget);
       expect(find.byType(BuildingDetailModal), findsOneWidget);
     });
+
+    testWidgets('shows "En este edificio" when user reference position is very close', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: BuildingDetailModal(
+              building: testBuilding,
+              referencePosition: LatLng(14.587794, -90.553240),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('En este edificio (< 1 min a pie)'), findsOneWidget);
+    });
+
+    testWidgets('shows distance and walking time when user reference position is provided', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: BuildingDetailModal(
+              building: testBuilding,
+              referencePosition: LatLng(14.588146, -90.551704), // ~170m
+            ),
+          ),
+        ),
+      );
+
+      expect(find.textContaining('Distancia actual:'), findsOneWidget);
+      expect(find.textContaining('a pie'), findsOneWidget);
+    });
   });
 }

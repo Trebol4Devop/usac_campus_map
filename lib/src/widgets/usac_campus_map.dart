@@ -6,7 +6,11 @@ import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
 import '../models/building_category.dart';
 import '../models/campus_building.dart';
+import '../models/campus_route.dart';
+import '../services/distance_service.dart';
 import '../services/location_service.dart';
+import '../services/route_service.dart';
+import 'building_detail_modal.dart';
 
 abstract final class UsacMapTileServers {
   static const String openStreetMap =
@@ -24,6 +28,13 @@ class UsacCampusMap extends StatefulWidget {
   final double maxZoom;
   final bool showCampusBoundary;
   final List<Polygon>? customPolygons;
+  final List<Polyline>? customPolylines;
+  final CampusBuilding? routeDestination;
+  final CampusRoute? activeRoute;
+  final VoidCallback? onClearRoute;
+  final Color routeColor;
+  final double routeStrokeWidth;
+  final bool animateCameraTransitions;
   final CameraConstraint? cameraConstraint;
   final InteractionOptions? interactionOptions;
   final ValueChanged<bool>? onCampusStatusChanged;
@@ -45,6 +56,7 @@ class UsacCampusMap extends StatefulWidget {
   final bool enableActiveTracking;
   final VoidCallback? onRecenterCampus;
   final ValueChanged<LatLng>? onUserLocationTap;
+  final ValueChanged<LatLng>? onUserLocationChanged;
 
   const UsacCampusMap({
     super.key,
@@ -57,6 +69,13 @@ class UsacCampusMap extends StatefulWidget {
     this.maxZoom = 19.0,
     this.showCampusBoundary = true,
     this.customPolygons,
+    this.customPolylines,
+    this.routeDestination,
+    this.activeRoute,
+    this.onClearRoute,
+    this.routeColor = const Color(0xFF002B49),
+    this.routeStrokeWidth = 4.5,
+    this.animateCameraTransitions = true,
     this.cameraConstraint,
     this.interactionOptions,
     this.onCampusStatusChanged,
@@ -78,21 +97,27 @@ class UsacCampusMap extends StatefulWidget {
     this.enableActiveTracking = false,
     this.onRecenterCampus,
     this.onUserLocationTap,
+    this.onUserLocationChanged,
   });
 
   @override
   State<UsacCampusMap> createState() => _UsacCampusMapState();
 }
 
-class _UsacCampusMapState extends State<UsacCampusMap> {
+class _UsacCampusMapState extends State<UsacCampusMap>
+    with TickerProviderStateMixin {
   MapController? _internalMapController;
   MapController get _effectiveMapController =>
       widget.mapController ?? (_internalMapController ??= MapController());
   final CampusLocationService _locationService = CampusLocationService();
+  final CampusDistanceService _distanceService = CampusDistanceService();
+  final CampusRouteService _routeService = CampusRouteService();
   StreamSubscription<LatLng>? _locationSubscription;
   LatLng? _currentPosition;
   bool _isInsideCampus = true;
   bool _bannerDismissed = false;
+  AnimationController? _cameraAnimController;
+  CampusRoute? _internalActiveRoute;
 
   @override
   void initState() {
@@ -114,7 +139,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             }
           });
           if (widget.enableActiveTracking) {
-            _effectiveMapController.move(
+            _animatedMapMove(
               pos,
               _effectiveMapController.camera.zoom,
             );
@@ -122,23 +147,138 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
           if (statusChanged) {
             widget.onCampusStatusChanged?.call(isInside);
           }
+          widget.onUserLocationChanged?.call(pos);
         }
       },
     );
   }
 
   @override
+  void didUpdateWidget(covariant UsacCampusMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.mapController != widget.mapController &&
+        widget.mapController != null) {
+      _internalMapController?.dispose();
+      _internalMapController = null;
+    }
+
+    if (oldWidget.routeDestination != widget.routeDestination &&
+        widget.routeDestination != null) {
+      _animatedMapMove(widget.routeDestination!.location, 17.5);
+    } else if (oldWidget.activeRoute != widget.activeRoute &&
+        widget.activeRoute != null) {
+      _animatedMapMove(widget.activeRoute!.destination.location, 17.5);
+    }
+  }
+
+  @override
   void dispose() {
+    _cameraAnimController?.dispose();
     _locationSubscription?.cancel();
     _internalMapController?.dispose();
     super.dispose();
   }
 
-  List<CampusBuilding> get _activeBuildings {
-    if (widget.buildings != null && widget.buildings!.isNotEmpty) {
-      return widget.buildings!;
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    if (!widget.animateCameraTransitions) {
+      _effectiveMapController.move(destLocation, destZoom);
+      return;
     }
-    return UsacCampusDataset.allBuildings;
+
+    _cameraAnimController?.dispose();
+
+    final latTween = Tween<double>(
+      begin: _effectiveMapController.camera.center.latitude,
+      end: destLocation.latitude,
+    );
+    final lngTween = Tween<double>(
+      begin: _effectiveMapController.camera.center.longitude,
+      end: destLocation.longitude,
+    );
+    final zoomTween = Tween<double>(
+      begin: _effectiveMapController.camera.zoom,
+      end: destZoom,
+    );
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _cameraAnimController = controller;
+
+    final animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOutCubic,
+    );
+
+    controller.addListener(() {
+      _effectiveMapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        if (_cameraAnimController == controller) {
+          _cameraAnimController = null;
+        }
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
+  }
+
+  CampusRoute? get _effectiveRoute {
+    if (widget.activeRoute != null) {
+      return widget.activeRoute;
+    }
+    if (widget.routeDestination != null) {
+      final origin = _currentPosition ?? UsacCampusDataset.campusCenter;
+      return _routeService.calculateRoute(
+        origin: origin,
+        destination: widget.routeDestination!,
+      );
+    }
+    return _internalActiveRoute;
+  }
+
+  void _clearEffectiveRoute() {
+    setState(() {
+      _internalActiveRoute = null;
+    });
+    widget.onClearRoute?.call();
+  }
+
+  void _setInternalRouteToBuilding(CampusBuilding building) {
+    final origin = _currentPosition ?? UsacCampusDataset.campusCenter;
+    final route = _routeService.calculateRoute(
+      origin: origin,
+      destination: building,
+    );
+    setState(() {
+      _internalActiveRoute = route;
+    });
+    _animatedMapMove(building.location, 17.5);
+  }
+
+  List<CampusBuilding> get _activeBuildings {
+    final source = widget.buildings != null && widget.buildings!.isNotEmpty
+        ? List<CampusBuilding>.from(widget.buildings!)
+        : List<CampusBuilding>.from(UsacCampusDataset.allBuildings);
+
+    final destId = _effectiveRoute?.destination.id;
+    if (destId != null) {
+      final destIndex = source.indexWhere((b) => b.id == destId);
+      if (destIndex != -1) {
+        final target = source.removeAt(destIndex);
+        source.add(target);
+      }
+    }
+
+    return source;
   }
 
   List<Polygon> get _polygons {
@@ -149,6 +289,28 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     if (widget.customPolygons != null) {
       list.addAll(widget.customPolygons!);
     }
+    return list;
+  }
+
+  List<Polyline> get _polylines {
+    final list = <Polyline>[];
+    if (widget.customPolylines != null) {
+      list.addAll(widget.customPolylines!);
+    }
+
+    final currentRoute = _effectiveRoute;
+    if (currentRoute != null && currentRoute.points.length >= 2) {
+      list.add(
+        Polyline(
+          points: currentRoute.points,
+          strokeWidth: widget.routeStrokeWidth,
+          color: widget.routeColor,
+          borderColor: Colors.white,
+          borderStrokeWidth: 2.0,
+        ),
+      );
+    }
+
     return list;
   }
 
@@ -201,26 +363,47 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   Widget _buildDefaultMarker(CampusBuilding building) {
     final color = _getCategoryColor(building.category);
     final icon = _getCategoryIcon(building.category);
+    final isDestination = _effectiveRoute?.destination.id == building.id;
 
     return GestureDetector(
-      onTap: () => widget.onBuildingTap?.call(building),
-      child: Container(
+      onTap: () {
+        if (widget.onBuildingTap != null) {
+          widget.onBuildingTap!(building);
+        } else {
+          BuildingDetailModal.show(
+            context: context,
+            building: building,
+            referencePosition: _currentPosition,
+            onNavigate: () {
+              Navigator.of(context).pop();
+              _setInternalRouteToBuilding(building);
+            },
+          );
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
         decoration: BoxDecoration(
-          color: color,
+          color: isDestination ? const Color(0xFFDC2626) : color,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: const [
+          border: Border.all(
+            color: isDestination ? const Color(0xFFFDE047) : Colors.white,
+            width: isDestination ? 3 : 2,
+          ),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+              color: isDestination
+                  ? const Color(0x66DC2626)
+                  : Colors.black26,
+              blurRadius: isDestination ? 8 : 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Icon(
-          icon,
+          isDestination ? Icons.flag : icon,
           color: Colors.white,
-          size: 20,
+          size: isDestination ? 22 : 20,
         ),
       ),
     );
@@ -231,7 +414,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     if (currentZoom < widget.maxZoom) {
       final targetZoom =
           (currentZoom + 1.0).clamp(widget.minZoom, widget.maxZoom);
-      _effectiveMapController.move(
+      _animatedMapMove(
         _effectiveMapController.camera.center,
         targetZoom,
       );
@@ -243,7 +426,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     if (currentZoom > widget.minZoom) {
       final targetZoom =
           (currentZoom - 1.0).clamp(widget.minZoom, widget.maxZoom);
-      _effectiveMapController.move(
+      _animatedMapMove(
         _effectiveMapController.camera.center,
         targetZoom,
       );
@@ -251,17 +434,30 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   }
 
   void _recenterCampus() {
-    _effectiveMapController.move(
+    _animatedMapMove(
       widget.initialCenter ?? UsacCampusDataset.campusCenter,
       widget.initialZoom,
     );
     widget.onRecenterCampus?.call();
   }
 
-  void _goToUserLocation() {
+  Future<void> _goToUserLocation() async {
     if (_currentPosition != null) {
-      _effectiveMapController.move(_currentPosition!, 17.0);
+      _animatedMapMove(_currentPosition!, 17.0);
       widget.onUserLocationTap?.call(_currentPosition!);
+      return;
+    }
+
+    final pos = await _locationService.getCurrentPosition();
+    if (pos != null && mounted) {
+      final isInside = UsacCampusBoundary.isInsideCampus(pos);
+      setState(() {
+        _currentPosition = pos;
+        _isInsideCampus = isInside;
+      });
+      _animatedMapMove(pos, 17.0);
+      widget.onUserLocationTap?.call(pos);
+      widget.onUserLocationChanged?.call(pos);
     }
   }
 
@@ -297,13 +493,21 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   @override
   Widget build(BuildContext context) {
     final polygons = _polygons;
+    final polylines = _polylines;
+    final activeRoute = _effectiveRoute;
 
     final mapWidget = RepaintBoundary(
       child: FlutterMap(
         mapController: _effectiveMapController,
         options: MapOptions(
-          initialCenter: widget.initialCenter ?? UsacCampusDataset.campusCenter,
-          initialZoom: widget.initialZoom,
+          initialCenter: widget.initialCenter ??
+              widget.activeRoute?.destination.location ??
+              widget.routeDestination?.location ??
+              UsacCampusDataset.campusCenter,
+          initialZoom:
+              (widget.routeDestination != null || widget.activeRoute != null)
+                  ? 17.0
+                  : widget.initialZoom,
           maxZoom: widget.maxZoom,
           minZoom: widget.minZoom,
           cameraConstraint:
@@ -331,13 +535,17 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             PolygonLayer(
               polygons: polygons,
             ),
+          if (polylines.isNotEmpty)
+            PolylineLayer(
+              polylines: polylines,
+            ),
           MarkerLayer(
             markers: [
               ..._activeBuildings.map(
                 (building) => Marker(
                   point: building.location,
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   child: RepaintBoundary(
                     child: widget.markerBuilder?.call(context, building) ??
                         _buildDefaultMarker(building),
@@ -384,14 +592,88 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
     final showAnyControl = widget.showRecenterCampusButton ||
         widget.showLocationButton ||
         widget.showZoomButtons;
+    final hasActiveRoute = activeRoute != null;
 
-    if (!hasActiveBanner && !showAnyControl) {
+    if (!hasActiveBanner && !showAnyControl && !hasActiveRoute) {
       return mapWidget;
     }
 
     return Stack(
       children: [
         Positioned.fill(child: mapWidget),
+        if (hasActiveRoute)
+          Positioned(
+            top: 14,
+            left: 16,
+            right: 16,
+            child: Material(
+              elevation: 5,
+              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFF002B49).withValues(alpha: 0.15),
+                    width: 1.2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF002B49).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.navigation,
+                        color: Color(0xFF002B49),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Ruta a ${activeRoute.destination.name}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Color(0xFF002B49),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Distancia: ${_distanceService.formatDistance(activeRoute.distanceInMeters)} (${_distanceService.formatWalkingTime(activeRoute.estimatedDuration)} a pie)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: 'Cancelar ruta',
+                      onPressed: _clearEffectiveRoute,
+                      splashRadius: 18,
+                      color: Colors.grey.shade700,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         if (showAnyControl)
           Positioned(
             right: 16,
@@ -463,7 +745,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                     Expanded(
                       child: Text(
                         widget.outOfCampusMessage ??
-                            'No estás en la universidad, pero puedes navegar el mapa con normalidad.',
+                            'No estas en la universidad, pero puedes navegar el mapa con normalidad.',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,

@@ -33,25 +33,22 @@ class CampusSearchBar extends StatefulWidget {
 }
 
 class _CampusSearchBarState extends State<CampusSearchBar> {
-  late final TextEditingController _effectiveController;
-  bool _isInternalController = false;
+  TextEditingController? _internalController;
+  TextEditingController get _effectiveController =>
+      widget.controller ?? (_internalController ??= TextEditingController());
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.controller == null) {
-      _effectiveController = TextEditingController();
-      _isInternalController = true;
-    } else {
-      _effectiveController = widget.controller!;
+  void didUpdateWidget(covariant CampusSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller && widget.controller != null) {
+      _internalController?.dispose();
+      _internalController = null;
     }
   }
 
   @override
   void dispose() {
-    if (_isInternalController) {
-      _effectiveController.dispose();
-    }
+    _internalController?.dispose();
     super.dispose();
   }
 

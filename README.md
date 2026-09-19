@@ -190,6 +190,7 @@ classDiagram
         +calculateDistance(point1, point2) double
         +calculateBuildingDistance(from, building) double
         +estimateWalkingDuration(distanceMeters) Duration
+        +estimateCampusWalkingDuration(distanceMeters) Duration
         +formatDistance(distanceMeters) String
         +formatWalkingTime(duration) String
     }
@@ -205,6 +206,10 @@ classDiagram
         +bool showLocationButton
         +bool showZoomButtons
         +bool enableActiveTracking
+        +CampusBuilding? routeDestination
+        +List~Polyline~? customPolylines
+        +VoidCallback? onClearRoute
+        +bool animateCameraTransitions
         +MapController? mapController
         +createState() _UsacCampusMapState
     }
@@ -321,7 +326,9 @@ El subproyecto en `example/` integra todos los componentes de la libreria:
 - `CampusSearchBar`: Buscador interactivo por nombre, acronimo y facultades asociadas.
 - `CategoryFilterChips`: Barra horizontal de seleccion de categorias tematicas.
 - `UsacCampusMap`: Mapa reactivo con controles flotantes de recentrado, ubicacion GPS y zoom.
-- `BuildingDetailModal`: Ficha tecnica desplegable con calculo automatico de distancias Haversine y tiempos de caminata estimados.
+- `BuildingDetailModal`: Ficha tecnica desplegable con calculo automatico de distancias Haversine y tiempos de caminata estimados por andadores peatonales.
+- **Navegacion Visual de Ruta (`PolylineLayer`):** Trazado de ruta activa entre la posicion del usuario y el edificio seleccionado con panel flotante de navegacion.
+- **Transiciones Cinematograficas de Camara:** Movimientos fluidos y amortiguados (`CurvedAnimation`) al enfocar destinos o recentrar el campus.
 
 Para ejecutarla en su dispositivo:
 ```bash

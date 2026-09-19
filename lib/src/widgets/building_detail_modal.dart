@@ -93,7 +93,7 @@ class BuildingDetailModal extends StatelessWidget {
         distanceService.calculateBuildingDistance(effectiveReference, building);
     final distanceText = distanceService.formatDistance(distanceMeters);
     final walkingDuration =
-        distanceService.estimateWalkingDuration(distanceMeters);
+        distanceService.estimateCampusWalkingDuration(distanceMeters);
     final walkingText = distanceService.formatWalkingTime(walkingDuration);
     final categoryColor = _getCategoryColor(building.category);
     final categoryIcon = _getCategoryIcon(building.category);
@@ -109,182 +109,187 @@ class BuildingDetailModal extends StatelessWidget {
         top: 12,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: categoryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: categoryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    color: categoryColor,
+                    size: 28,
+                  ),
                 ),
-                child: Icon(
-                  categoryIcon,
-                  color: categoryColor,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      building.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF002B49),
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (building.acronym != null) ...[
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        building.name,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF002B49),
+                                ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (building.acronym != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF002B49),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                building.acronym!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF002B49),
+                              color: categoryColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              building.acronym!,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              building.category.label,
+                              style: TextStyle(
+                                color: categoryColor,
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
                         ],
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: categoryColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            building.category.label,
-                            style: TextStyle(
-                              color: categoryColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 22),
-                onPressed: onClose ?? () => Navigator.of(context).pop(),
-                splashRadius: 20,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            building.description,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade800,
-              height: 1.4,
+                IconButton(
+                  icon: const Icon(Icons.close, size: 22),
+                  onPressed: onClose ?? () => Navigator.of(context).pop(),
+                  splashRadius: 20,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-          if (building.floors != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              building.description,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade800,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            if (building.floors != null) ...[
+              Row(
+                children: [
+                  Icon(Icons.layers_outlined,
+                      size: 18, color: Colors.grey.shade700),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Niveles: ${building.floors}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
-                Icon(Icons.layers_outlined,
+                Icon(Icons.pin_drop_outlined,
                     size: 18, color: Colors.grey.shade700),
                 const SizedBox(width: 8),
                 Text(
-                  'Niveles: ${building.floors}',
+                  'Coordenadas: ${building.location.latitude.toStringAsFixed(5)}, ${building.location.longitude.toStringAsFixed(5)}',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-          ],
-          Row(
-            children: [
-              Icon(Icons.pin_drop_outlined,
-                  size: 18, color: Colors.grey.shade700),
-              const SizedBox(width: 8),
-              Text(
-                'Coordenadas: ${building.location.latitude.toStringAsFixed(5)}, ${building.location.longitude.toStringAsFixed(5)}',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.directions_walk,
-                size: 18,
-                color: Color(0xFF002B49),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  referencePosition == null
-                      ? 'Distancia desde centro USAC: $distanceText ($walkingText a pie)'
-                      : 'Distancia actual: $distanceText ($walkingText a pie)',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF002B49),
+            Row(
+              children: [
+                const Icon(
+                  Icons.directions_walk,
+                  size: 18,
+                  color: Color(0xFF002B49),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    referencePosition != null && distanceMeters <= 25
+                        ? 'En este edificio (< 1 min a pie)'
+                        : referencePosition == null
+                            ? 'Desde centro USAC: $distanceText ($walkingText a pie)'
+                            : 'Distancia actual: $distanceText ($walkingText a pie)',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF002B49),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          if (onNavigate != null) ...[
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onNavigate,
-                icon: const Icon(Icons.navigation, size: 18),
-                label: const Text('Centrar en el Mapa'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF002B49),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
+              ],
             ),
+            if (onNavigate != null) ...[
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onNavigate,
+                  icon: const Icon(Icons.navigation, size: 18),
+                  label: const Text('Cómo llegar / Trazar Ruta'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF002B49),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

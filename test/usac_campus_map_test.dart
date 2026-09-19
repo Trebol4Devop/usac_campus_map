@@ -1,7 +1,27 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
+
+final Uint8List _transparentPng = Uint8List.fromList(<int>[
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49,
+  0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06,
+  0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44,
+  0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D,
+  0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
+  0x60, 0x82,
+]);
+
+class FakeTileProvider extends TileProvider {
+  FakeTileProvider();
+
+  @override
+  ImageProvider getImage(TileCoordinates coordinates, TileLayer options) {
+    return MemoryImage(_transparentPng);
+  }
+}
 
 void main() {
   group('UsacMapTileServers', () {
@@ -56,9 +76,11 @@ void main() {
 
     testWidgets('renders floating interactive action buttons by default', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: UsacCampusMap(),
+            body: UsacCampusMap(
+              tileProvider: FakeTileProvider(),
+            ),
           ),
         ),
       );
@@ -68,6 +90,62 @@ void main() {
       expect(find.byTooltip('Alejar'), findsOneWidget);
       expect(find.byTooltip('Centrar en Campus Central'), findsOneWidget);
       expect(find.byTooltip('Mi ubicacion'), findsOneWidget);
+    });
+
+    testWidgets('renders route polyline and navigation card when routeDestination is provided', (tester) async {
+      final destination = UsacCampusDataset.allBuildings.first;
+      bool cleared = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: UsacCampusMap(
+              tileProvider: FakeTileProvider(),
+              routeDestination: destination,
+              onClearRoute: () => cleared = true,
+              animateCameraTransitions: false,
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(PolylineLayer), findsOneWidget);
+      expect(find.textContaining('Ruta a'), findsOneWidget);
+      expect(find.byTooltip('Cancelar ruta'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Cancelar ruta'));
+      expect(cleared, isTrue);
+    });
+
+    testWidgets('renders route polyline and navigation card when activeRoute is provided directly', (tester) async {
+      final destination = UsacCampusDataset.allBuildings.first;
+      const origin = LatLng(14.587500, -90.551845);
+      final route = CampusRoute(
+        origin: origin,
+        destination: destination,
+        points: const [origin, LatLng(14.588000, -90.552500), LatLng(14.588576, -90.553156)],
+        distanceInMeters: 250.0,
+        estimatedDuration: const Duration(minutes: 3),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: UsacCampusMap(
+              tileProvider: FakeTileProvider(),
+              activeRoute: route,
+              animateCameraTransitions: false,
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(PolylineLayer), findsOneWidget);
+      expect(find.textContaining('Ruta a'), findsOneWidget);
+      expect(find.textContaining('250 m'), findsOneWidget);
+      expect(find.textContaining('3 min a pie'), findsOneWidget);
     });
   });
 }
