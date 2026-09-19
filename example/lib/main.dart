@@ -29,25 +29,17 @@ class CampusMapDemoPage extends StatefulWidget {
 }
 
 class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
+  final CampusSearchService _searchService = CampusSearchService();
+  final CampusDistanceService _distanceService = CampusDistanceService();
   BuildingCategory? _selectedCategory;
   String _searchQuery = '';
   bool _showBoundary = true;
 
   List<CampusBuilding> get _filteredBuildings {
-    var list = UsacCampusDataset.allBuildings;
-    if (_selectedCategory != null) {
-      list = list.where((b) => b.category == _selectedCategory).toList();
-    }
-    if (_searchQuery.trim().isNotEmpty) {
-      final q = _searchQuery.trim().toLowerCase();
-      list = list.where((b) {
-        final matchesName = b.name.toLowerCase().contains(q);
-        final matchesAcronym = b.acronym?.toLowerCase().contains(q) ?? false;
-        final matchesDesc = b.description.toLowerCase().contains(q);
-        return matchesName || matchesAcronym || matchesDesc;
-      }).toList();
-    }
-    return list;
+    return _searchService.search(
+      query: _searchQuery,
+      category: _selectedCategory,
+    );
   }
 
   void _onBuildingTap(CampusBuilding building) {
@@ -131,6 +123,20 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
                   Text(
                     'Coordenadas: ${building.location.latitude.toStringAsFixed(4)}, ${building.location.longitude.toStringAsFixed(4)}',
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.directions_walk, size: 18, color: Color(0xFF002B49)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Distancia desde centro USAC: ${_distanceService.formatDistance(_distanceService.calculateBuildingDistance(UsacCampusDataset.campusCenter, building))} (${_distanceService.formatWalkingTime(_distanceService.estimateWalkingDuration(_distanceService.calculateBuildingDistance(UsacCampusDataset.campusCenter, building)))} a pie)',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF002B49),
+                        ),
                   ),
                 ],
               ),
