@@ -8,6 +8,12 @@ import '../models/building_category.dart';
 import '../models/campus_building.dart';
 import '../services/location_service.dart';
 
+abstract final class UsacMapTileServers {
+  static const String openStreetMap =
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static const List<String> defaultSubdomains = ['a', 'b', 'c'];
+}
+
 class UsacCampusMap extends StatefulWidget {
   final List<CampusBuilding>? buildings;
   final Function(CampusBuilding)? onBuildingTap;
@@ -23,6 +29,15 @@ class UsacCampusMap extends StatefulWidget {
   final ValueChanged<bool>? onCampusStatusChanged;
   final bool showOutOfCampusBanner;
   final String? outOfCampusMessage;
+  final String urlTemplate;
+  final List<String> subdomains;
+  final TileProvider? tileProvider;
+  final TileDisplay tileDisplay;
+  final TileUpdateTransformer? tileUpdateTransformer;
+  final int keepBuffer;
+  final int panBuffer;
+  final LatLngBounds? tileBounds;
+  final String userAgentPackageName;
 
   const UsacCampusMap({
     super.key,
@@ -40,6 +55,15 @@ class UsacCampusMap extends StatefulWidget {
     this.onCampusStatusChanged,
     this.showOutOfCampusBanner = true,
     this.outOfCampusMessage,
+    this.urlTemplate = UsacMapTileServers.openStreetMap,
+    this.subdomains = UsacMapTileServers.defaultSubdomains,
+    this.tileProvider,
+    this.tileDisplay = const TileDisplay.instantaneous(),
+    this.tileUpdateTransformer,
+    this.keepBuffer = 2,
+    this.panBuffer = 0,
+    this.tileBounds,
+    this.userAgentPackageName = 'gt.edu.usac.map',
   });
 
   @override
@@ -199,12 +223,18 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
         ),
         children: [
           TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'gt.edu.usac.map',
-            tileDisplay:
-                const TileDisplay.fadeIn(duration: Duration(milliseconds: 120)),
-            keepBuffer: 3,
-            panBuffer: 1,
+            urlTemplate: widget.urlTemplate,
+            subdomains: widget.subdomains,
+            tileProvider: widget.tileProvider,
+            userAgentPackageName: widget.userAgentPackageName,
+            tileDisplay: widget.tileDisplay,
+            tileUpdateTransformer: widget.tileUpdateTransformer ??
+                TileUpdateTransformers.throttle(
+                  const Duration(milliseconds: 100),
+                ),
+            keepBuffer: widget.keepBuffer,
+            panBuffer: widget.panBuffer,
+            tileBounds: widget.tileBounds,
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
           ),
           if (polygons.isNotEmpty)
