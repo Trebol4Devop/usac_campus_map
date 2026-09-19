@@ -27,6 +27,8 @@ class UsacCampusMap extends StatefulWidget {
   final double minZoom;
   final double maxZoom;
   final bool showCampusBoundary;
+  final bool clipToCampus;
+  final Color campusCutoutColor;
   final List<Polygon>? customPolygons;
   final List<Polyline>? customPolylines;
   final CampusBuilding? routeDestination;
@@ -68,6 +70,8 @@ class UsacCampusMap extends StatefulWidget {
     this.minZoom = 15.0,
     this.maxZoom = 19.0,
     this.showCampusBoundary = true,
+    this.clipToCampus = true,
+    this.campusCutoutColor = Colors.white,
     this.customPolygons,
     this.customPolylines,
     this.routeDestination,
@@ -307,7 +311,16 @@ class _UsacCampusMapState extends State<UsacCampusMap>
 
   List<Polygon> get _polygons {
     final list = <Polygon>[];
-    if (widget.showCampusBoundary) {
+    if (widget.clipToCampus) {
+      list.add(
+        UsacCampusBoundary.createCampusCutoutMask(
+          color: widget.campusCutoutColor,
+          borderColor: const Color(0xFF002B49),
+          borderStrokeWidth: 2.5,
+        ),
+      );
+    }
+    if (widget.showCampusBoundary && !widget.clipToCampus) {
       list.add(UsacCampusBoundary.defaultPerimeterPolygon);
     }
     if (widget.customPolygons != null) {

@@ -40,6 +40,8 @@ void main() {
       expect(map.panBuffer, equals(0), reason: 'panBuffer should be 0 to avoid loading offscreen tiles initially');
       expect(map.keepBuffer, equals(2));
       expect(map.minZoom, equals(15.0));
+      expect(map.clipToCampus, isTrue);
+      expect(map.campusCutoutColor, equals(Colors.white));
       expect(map.tileDisplay, isA<InstantaneousTileDisplay>(), reason: 'tileDisplay should be instantaneous to prevent fade-in lag');
       expect(map.showRecenterCampusButton, isTrue);
       expect(map.showLocationButton, isTrue);
@@ -62,6 +64,8 @@ void main() {
         showLocationButton: false,
         showRecenterCampusButton: false,
         enableActiveTracking: true,
+        clipToCampus: false,
+        campusCutoutColor: Colors.black,
       );
 
       expect(map.urlTemplate, equals(customUrl));
@@ -73,6 +77,17 @@ void main() {
       expect(map.showLocationButton, isFalse);
       expect(map.showRecenterCampusButton, isFalse);
       expect(map.enableActiveTracking, isTrue);
+      expect(map.clipToCampus, isFalse);
+      expect(map.campusCutoutColor, equals(Colors.black));
+    });
+
+    test('UsacCampusBoundary generates valid cutout mask with campus perimeter hole', () {
+      final mask = UsacCampusBoundary.createCampusCutoutMask();
+      expect(mask.holePointsList, isNotNull);
+      expect(mask.holePointsList!.length, equals(1));
+      expect(mask.holePointsList!.first.length, equals(UsacCampusBoundary.campusPerimeter.length));
+      expect(mask.disableHolesBorder, isFalse);
+      expect(mask.borderColor, equals(const Color(0xFF002B49)));
     });
 
     testWidgets('renders floating interactive action buttons by default', (tester) async {

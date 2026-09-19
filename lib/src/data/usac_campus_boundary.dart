@@ -110,10 +110,37 @@ class UsacCampusBoundary {
     );
   }
 
+  static Polygon createCampusCutoutMask({
+    Color color = Colors.white,
+    Color borderColor = const Color(0xFF002B49),
+    double borderStrokeWidth = 2.5,
+  }) {
+    return Polygon(
+      points: const [
+        LatLng(85.0, -180.0),
+        LatLng(85.0, 180.0),
+        LatLng(-85.0, 180.0),
+        LatLng(-85.0, -180.0),
+      ],
+      holePointsList: [campusPerimeter],
+      color: color,
+      borderColor: borderColor,
+      borderStrokeWidth: borderStrokeWidth,
+      disableHolesBorder: false,
+    );
+  }
+
+  static LatLngBounds get exactCampusBounds {
+    return LatLngBounds(
+      const LatLng(14.5760, -90.5605),
+      const LatLng(14.5905, -90.5445),
+    );
+  }
+
   static LatLngBounds get defaultCameraBounds {
     return LatLngBounds(
-      const LatLng(14.5750, -90.5630),
-      const LatLng(14.5930, -90.5420),
+      const LatLng(14.5760, -90.5605),
+      const LatLng(14.5905, -90.5445),
     );
   }
 }
