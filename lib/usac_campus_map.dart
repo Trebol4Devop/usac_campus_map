@@ -7,4 +7,7 @@ export 'src/models/campus_building.dart';
 export 'src/services/distance_service.dart';
 export 'src/services/location_service.dart';
 export 'src/services/search_service.dart';
+export 'src/widgets/building_detail_modal.dart';
+export 'src/widgets/campus_search_bar.dart';
+export 'src/widgets/category_filter_chips.dart';
 export 'src/widgets/usac_campus_map.dart';
