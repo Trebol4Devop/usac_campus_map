@@ -65,7 +65,7 @@ class UsacCampusMap extends StatefulWidget {
     this.markerBuilder,
     this.initialCenter,
     this.initialZoom = 16.5,
-    this.minZoom = 3.0,
+    this.minZoom = 15.0,
     this.maxZoom = 19.0,
     this.showCampusBoundary = true,
     this.customPolygons,
@@ -132,22 +132,24 @@ class _UsacCampusMapState extends State<UsacCampusMap>
           final isInside = UsacCampusBoundary.isInsideCampus(pos);
           final statusChanged = isInside != _isInsideCampus;
           setState(() {
-            _currentPosition = pos;
+            _currentPosition = isInside ? pos : null;
             _isInsideCampus = isInside;
             if (statusChanged && isInside) {
               _bannerDismissed = false;
             }
           });
-          if (widget.enableActiveTracking) {
-            _animatedMapMove(
-              pos,
-              _effectiveMapController.camera.zoom,
-            );
+          if (isInside) {
+            if (widget.enableActiveTracking) {
+              _animatedMapMove(
+                pos,
+                _effectiveMapController.camera.zoom,
+              );
+            }
+            widget.onUserLocationChanged?.call(pos);
           }
           if (statusChanged) {
             widget.onCampusStatusChanged?.call(isInside);
           }
-          widget.onUserLocationChanged?.call(pos);
         }
       },
     );
@@ -233,9 +235,17 @@ class _UsacCampusMapState extends State<UsacCampusMap>
 
   CampusRoute? get _effectiveRoute {
     if (widget.activeRoute != null) {
+      if (!UsacCampusBoundary.isInsideCampus(widget.activeRoute!.origin) ||
+          !UsacCampusBoundary.isInsideCampus(
+              widget.activeRoute!.destination.location)) {
+        return null;
+      }
       return widget.activeRoute;
     }
     if (widget.routeDestination != null) {
+      if (!_isInsideCampus) {
+        return null;
+      }
       final origin = _currentPosition ?? UsacCampusDataset.campusCenter;
       return _routeService.calculateRoute(
         origin: origin,
@@ -253,15 +263,29 @@ class _UsacCampusMapState extends State<UsacCampusMap>
   }
 
   void _setInternalRouteToBuilding(CampusBuilding building) {
-    final origin = _currentPosition ?? UsacCampusDataset.campusCenter;
+    final origin = _currentPosition;
+    if (origin == null || !UsacCampusBoundary.isInsideCampus(origin)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Debes estar dentro del Campus Central para trazar una ruta a pie.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
     final route = _routeService.calculateRoute(
       origin: origin,
       destination: building,
     );
-    setState(() {
-      _internalActiveRoute = route;
-    });
-    _animatedMapMove(building.location, 17.5);
+    if (route != null) {
+      setState(() {
+        _internalActiveRoute = route;
+      });
+      _animatedMapMove(building.location, 17.5);
+    }
   }
 
   List<CampusBuilding> get _activeBuildings {
@@ -442,7 +466,20 @@ class _UsacCampusMapState extends State<UsacCampusMap>
   }
 
   Future<void> _goToUserLocation() async {
-    if (_currentPosition != null) {
+    final serviceEnabled = await _locationService.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El servicio de ubicacion se encuentra desactivado.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (_currentPosition != null &&
+        UsacCampusBoundary.isInsideCampus(_currentPosition!)) {
       _animatedMapMove(_currentPosition!, 17.0);
       widget.onUserLocationTap?.call(_currentPosition!);
       return;
@@ -451,9 +488,21 @@ class _UsacCampusMapState extends State<UsacCampusMap>
     final pos = await _locationService.getCurrentPosition();
     if (pos != null && mounted) {
       final isInside = UsacCampusBoundary.isInsideCampus(pos);
+      if (!isInside) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Tu ubicacion actual se encuentra fuera del Campus Central.',
+              ),
+            ),
+          );
+        }
+        return;
+      }
       setState(() {
         _currentPosition = pos;
-        _isInsideCampus = isInside;
+        _isInsideCampus = true;
       });
       _animatedMapMove(pos, 17.0);
       widget.onUserLocationTap?.call(pos);
@@ -510,8 +559,10 @@ class _UsacCampusMapState extends State<UsacCampusMap>
                   : widget.initialZoom,
           maxZoom: widget.maxZoom,
           minZoom: widget.minZoom,
-          cameraConstraint:
-              widget.cameraConstraint ?? const CameraConstraint.unconstrained(),
+          cameraConstraint: widget.cameraConstraint ??
+              CameraConstraint.containCenter(
+                bounds: UsacCampusBoundary.defaultCameraBounds,
+              ),
           interactionOptions: widget.interactionOptions ??
               const InteractionOptions(flags: InteractiveFlag.all),
         ),
@@ -528,7 +579,8 @@ class _UsacCampusMapState extends State<UsacCampusMap>
                 ),
             keepBuffer: widget.keepBuffer,
             panBuffer: widget.panBuffer,
-            tileBounds: widget.tileBounds,
+            tileBounds:
+                widget.tileBounds ?? UsacCampusBoundary.defaultCameraBounds,
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
           ),
           if (polygons.isNotEmpty)

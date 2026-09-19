@@ -17,7 +17,8 @@ void main() {
         destination: destination,
       );
 
-      expect(route.origin, equals(origin));
+      expect(route, isNotNull);
+      expect(route!.origin, equals(origin));
       expect(route.destination.id, equals('t-3'));
       expect(route.points.length, equals(2));
       expect(route.distanceInMeters, lessThan(5.0));
@@ -35,7 +36,8 @@ void main() {
         destination: destination,
       );
 
-      expect(route.points.length, greaterThanOrEqualTo(3));
+      expect(route, isNotNull);
+      expect(route!.points.length, greaterThanOrEqualTo(3));
       expect(route.points.first, equals(origin));
       expect(route.points.last, equals(destination.location));
       expect(route.distanceInMeters, greaterThan(600.0));
@@ -52,9 +54,34 @@ void main() {
         destinationName: 'Biblioteca Central',
       );
 
-      expect(route.points.isNotEmpty, isTrue);
+      expect(route, isNotNull);
+      expect(route!.points.isNotEmpty, isTrue);
       expect(route.points.first, equals(origin));
       expect(route.points.last, equals(targetCoords));
+    });
+
+    test('returns null when origin is outside campus boundaries', () {
+      const externalOrigin = LatLng(14.620000, -90.510000);
+      final destination = UsacCampusDataset.allBuildings.first;
+
+      final route = routeService.calculateRoute(
+        origin: externalOrigin,
+        destination: destination,
+      );
+
+      expect(route, isNull);
+    });
+
+    test('returns null when destination coordinates are outside campus boundaries', () {
+      const origin = LatLng(14.588146, -90.551704);
+      const externalDestination = LatLng(14.620000, -90.510000);
+
+      final route = routeService.calculateRouteToCoordinates(
+        origin: origin,
+        destinationCoords: externalDestination,
+      );
+
+      expect(route, isNull);
     });
   });
 }

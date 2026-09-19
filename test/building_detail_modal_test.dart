@@ -86,5 +86,35 @@ void main() {
       expect(find.textContaining('Distancia actual:'), findsOneWidget);
       expect(find.textContaining('a pie'), findsOneWidget);
     });
+
+    testWidgets('shows warning message when reference position is outside campus', (tester) async {
+      bool navigated = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BuildingDetailModal(
+              building: testBuilding,
+              referencePosition: const LatLng(14.620000, -90.510000),
+              onNavigate: () => navigated = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.text('Tu ubicacion actual se encuentra fuera del Campus Central'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Cómo llegar / Trazar Ruta'));
+      await tester.pump();
+
+      expect(navigated, isFalse);
+      expect(
+        find.text('Debes estar dentro del Campus Central para trazar una ruta a pie.'),
+        findsOneWidget,
+      );
+    });
   });
 }

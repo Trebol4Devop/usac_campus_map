@@ -3,27 +3,41 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 class CampusLocationService {
-  Stream<LatLng> get studentPositionStream async* {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
+  Future<bool> isLocationServiceEnabled() async {
+    try {
+      return await Geolocator.isLocationServiceEnabled();
+    } catch (_) {
+      return false;
     }
+  }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+  Stream<LatLng> get studentPositionStream async* {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         return;
       }
-    }
 
-    yield* Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 3,
-      ),
-    ).map((position) => LatLng(position.latitude, position.longitude));
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          return;
+        }
+      } else if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      yield* Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 3,
+        ),
+      ).map((position) => LatLng(position.latitude, position.longitude));
+    } catch (_) {
+      return;
+    }
   }
 
   Future<LatLng?> getCurrentPosition() async {
@@ -40,6 +54,8 @@ class CampusLocationService {
             permission == LocationPermission.deniedForever) {
           return null;
         }
+      } else if (permission == LocationPermission.deniedForever) {
+        return null;
       }
 
       final position = await Geolocator.getCurrentPosition(

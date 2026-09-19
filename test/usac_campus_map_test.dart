@@ -39,6 +39,7 @@ void main() {
       expect(map.subdomains, equals(UsacMapTileServers.defaultSubdomains));
       expect(map.panBuffer, equals(0), reason: 'panBuffer should be 0 to avoid loading offscreen tiles initially');
       expect(map.keepBuffer, equals(2));
+      expect(map.minZoom, equals(15.0));
       expect(map.tileDisplay, isA<InstantaneousTileDisplay>(), reason: 'tileDisplay should be instantaneous to prevent fade-in lag');
       expect(map.showRecenterCampusButton, isTrue);
       expect(map.showLocationButton, isTrue);

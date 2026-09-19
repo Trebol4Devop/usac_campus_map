@@ -14,5 +14,11 @@ void main() {
       final future = service.getCurrentPosition();
       expect(future, isA<Future>());
     });
+
+    test('isLocationServiceEnabled returns a Future<bool>', () {
+      final service = CampusLocationService();
+      final future = service.isLocationServiceEnabled();
+      expect(future, isA<Future<bool>>());
+    });
   });
 }

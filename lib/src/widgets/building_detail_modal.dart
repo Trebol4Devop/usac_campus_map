@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
 import '../models/building_category.dart';
 import '../models/campus_building.dart';
@@ -255,11 +256,15 @@ class BuildingDetailModal extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    referencePosition != null && distanceMeters <= 25
-                        ? 'En este edificio (< 1 min a pie)'
-                        : referencePosition == null
-                            ? 'Desde centro USAC: $distanceText ($walkingText a pie)'
-                            : 'Distancia actual: $distanceText ($walkingText a pie)',
+                    referencePosition != null &&
+                            !UsacCampusBoundary.isInsideCampus(
+                                referencePosition!)
+                        ? 'Tu ubicacion actual se encuentra fuera del Campus Central'
+                        : referencePosition != null && distanceMeters <= 25
+                            ? 'En este edificio (< 1 min a pie)'
+                            : referencePosition == null
+                                ? 'Desde centro USAC: $distanceText ($walkingText a pie)'
+                                : 'Distancia actual: $distanceText ($walkingText a pie)',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -274,7 +279,21 @@ class BuildingDetailModal extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: onNavigate,
+                  onPressed: () {
+                    if (referencePosition != null &&
+                        !UsacCampusBoundary.isInsideCampus(
+                            referencePosition!)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Debes estar dentro del Campus Central para trazar una ruta a pie.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    onNavigate?.call();
+                  },
                   icon: const Icon(Icons.navigation, size: 18),
                   label: const Text('Cómo llegar / Trazar Ruta'),
                   style: ElevatedButton.styleFrom(

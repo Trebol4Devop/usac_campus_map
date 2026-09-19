@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
 import '../models/campus_building.dart';
 import '../models/campus_route.dart';
@@ -28,10 +29,15 @@ class CampusRouteService {
     LatLng(14.589000, -90.549500),
   ];
 
-  CampusRoute calculateRoute({
+  CampusRoute? calculateRoute({
     required LatLng origin,
     required CampusBuilding destination,
   }) {
+    if (!UsacCampusBoundary.isInsideCampus(origin) ||
+        !UsacCampusBoundary.isInsideCampus(destination.location)) {
+      return null;
+    }
+
     final directDistance =
         _distanceService.calculateDistance(origin, destination.location);
 
@@ -90,11 +96,16 @@ class CampusRouteService {
     );
   }
 
-  CampusRoute calculateRouteToCoordinates({
+  CampusRoute? calculateRouteToCoordinates({
     required LatLng origin,
     required LatLng destinationCoords,
     String? destinationName,
   }) {
+    if (!UsacCampusBoundary.isInsideCampus(origin) ||
+        !UsacCampusBoundary.isInsideCampus(destinationCoords)) {
+      return null;
+    }
+
     final targetBuilding = UsacCampusDataset.allBuildings.firstWhere(
       (b) =>
           _distanceService.calculateDistance(b.location, destinationCoords) <
