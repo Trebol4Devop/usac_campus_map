@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
 import '../models/building_category.dart';
 import '../models/campus_building.dart';
@@ -13,6 +14,8 @@ class UsacCampusMap extends StatefulWidget {
   final Widget Function(BuildContext, CampusBuilding)? markerBuilder;
   final LatLng? initialCenter;
   final double initialZoom;
+  final bool showCampusBoundary;
+  final List<Polygon>? customPolygons;
 
   const UsacCampusMap({
     super.key,
@@ -21,6 +24,8 @@ class UsacCampusMap extends StatefulWidget {
     this.markerBuilder,
     this.initialCenter,
     this.initialZoom = 16.5,
+    this.showCampusBoundary = true,
+    this.customPolygons,
   });
 
   @override
@@ -63,6 +68,17 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
       return widget.buildings!;
     }
     return UsacCampusDataset.allBuildings;
+  }
+
+  List<Polygon> get _polygons {
+    final list = <Polygon>[];
+    if (widget.showCampusBoundary) {
+      list.add(UsacCampusBoundary.defaultPerimeterPolygon);
+    }
+    if (widget.customPolygons != null) {
+      list.addAll(widget.customPolygons!);
+    }
+    return list;
   }
 
   Color _getCategoryColor(BuildingCategory category) {
@@ -141,6 +157,8 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
 
   @override
   Widget build(BuildContext context) {
+    final polygons = _polygons;
+
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
@@ -154,6 +172,10 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'gt.edu.usac.map',
         ),
+        if (polygons.isNotEmpty)
+          PolygonLayer(
+            polygons: polygons,
+          ),
         MarkerLayer(
           markers: [
             ..._activeBuildings.map(
