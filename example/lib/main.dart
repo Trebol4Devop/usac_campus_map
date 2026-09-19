@@ -31,6 +31,7 @@ class CampusMapDemoPage extends StatefulWidget {
 class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
   BuildingCategory? _selectedCategory;
   String _searchQuery = '';
+  bool _showBoundary = true;
 
   List<CampusBuilding> get _filteredBuildings {
     var list = UsacCampusDataset.allBuildings;
@@ -151,6 +152,20 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF002B49),
+        actions: [
+          IconButton(
+            tooltip: _showBoundary ? 'Ocultar perimetro' : 'Mostrar perimetro',
+            icon: Icon(
+              _showBoundary ? Icons.layers : Icons.layers_outlined,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              setState(() {
+                _showBoundary = !_showBoundary;
+              });
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(
@@ -181,6 +196,7 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
         children: [
           UsacCampusMap(
             buildings: buildings,
+            showCampusBoundary: _showBoundary,
             onBuildingTap: _onBuildingTap,
           ),
           Positioned(
