@@ -96,6 +96,16 @@ class CampusRouteService {
     );
   }
 
+  CampusRoute? calculateRouteBetweenBuildings({
+    required CampusBuilding origin,
+    required CampusBuilding destination,
+  }) {
+    return calculateRoute(
+      origin: origin.location,
+      destination: destination,
+    );
+  }
+
   CampusRoute? calculateRouteToCoordinates({
     required LatLng origin,
     required LatLng destinationCoords,

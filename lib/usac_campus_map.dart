@@ -1,5 +1,6 @@
 library usac_campus_map;
 
+export 'src/controllers/usac_campus_map_controller.dart';
 export 'src/data/usac_campus_boundary.dart';
 export 'src/data/usac_campus_dataset.dart';
 export 'src/models/building_category.dart';

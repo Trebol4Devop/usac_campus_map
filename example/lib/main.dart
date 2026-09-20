@@ -31,6 +31,7 @@ class CampusMapDemoPage extends StatefulWidget {
 
 class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
   final CampusSearchService _searchService = CampusSearchService();
+  final UsacCampusMapController _mapController = UsacCampusMapController();
   BuildingCategory? _selectedCategory;
   String _searchQuery = '';
   bool _showBoundary = true;
@@ -45,6 +46,7 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
   }
 
   void _onBuildingTap(CampusBuilding building) {
+    _mapController.highlightBuilding(building.id);
     BuildingDetailModal.show(
       context: context,
       building: building,
@@ -56,6 +58,139 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
         });
       },
     );
+  }
+
+  void _showRoutePlannerSheet() {
+    CampusBuilding? selectedOrigin = UsacCampusDataset.getById('t-3');
+    CampusBuilding? selectedDestination =
+        UsacCampusDataset.getById('biblio-central');
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final allBuildings = UsacCampusDataset.allBuildings;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 24,
+                bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.alt_route, color: Color(0xFF002B49)),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Planificador de Rutas Peatonales',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF002B49),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(modalContext).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<CampusBuilding>(
+                    decoration: const InputDecoration(
+                      labelText: 'Edificio de Origen',
+                      prefixIcon: Icon(Icons.trip_origin, color: Colors.green),
+                      border: OutlineInputBorder(),
+                    ),
+                    value: selectedOrigin,
+                    isExpanded: true,
+                    items: allBuildings
+                        .map(
+                          (b) => DropdownMenuItem(
+                            value: b,
+                            child: Text(
+                              b.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      setModalState(() {
+                        selectedOrigin = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<CampusBuilding>(
+                    decoration: const InputDecoration(
+                      labelText: 'Edificio de Destino',
+                      prefixIcon: Icon(Icons.location_on, color: Colors.red),
+                      border: OutlineInputBorder(),
+                    ),
+                    value: selectedDestination,
+                    isExpanded: true,
+                    items: allBuildings
+                        .map(
+                          (b) => DropdownMenuItem(
+                            value: b,
+                            child: Text(
+                              b.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      setModalState(() {
+                        selectedDestination = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF002B49),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    icon: const Icon(Icons.directions_walk),
+                    label: const Text('Trazar Ruta Peatonal'),
+                    onPressed: (selectedOrigin != null &&
+                            selectedDestination != null &&
+                            selectedOrigin != selectedDestination)
+                        ? () {
+                            Navigator.of(modalContext).pop();
+                            setState(() {
+                              _navigatingDestination = null;
+                            });
+                            _mapController.startRouteBetweenBuildings(
+                              origin: selectedOrigin!,
+                              destination: selectedDestination!,
+                            );
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,6 +205,11 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
         ),
         backgroundColor: const Color(0xFF002B49),
         actions: [
+          IconButton(
+            tooltip: 'Planificar ruta entre edificios',
+            icon: const Icon(Icons.alt_route, color: Colors.white),
+            onPressed: _showRoutePlannerSheet,
+          ),
           IconButton(
             tooltip: _showBoundary ? 'Ocultar perimetro' : 'Mostrar perimetro',
             icon: Icon(
@@ -98,17 +238,27 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
       body: Stack(
         children: [
           UsacCampusMap(
+            controller: _mapController,
             buildings: buildings,
             showCampusBoundary: _showBoundary,
             routeDestination: _navigatingDestination,
-            onClearRoute: () => setState(() => _navigatingDestination = null),
+            onClearRoute: () {
+              setState(() {
+                _navigatingDestination = null;
+              });
+              _mapController.clearRoute();
+            },
             onBuildingTap: _onBuildingTap,
-            onUserLocationTap: (loc) => setState(() => _currentUserPosition = loc),
+            onUserLocationTap: (loc) =>
+                setState(() => _currentUserPosition = loc),
             onUserLocationChanged: (loc) =>
                 setState(() => _currentUserPosition = loc),
           ),
           Positioned(
-            top: _navigatingDestination != null ? 76 : 10,
+            top: (_navigatingDestination != null ||
+                    _mapController.currentRoute != null)
+                ? 76
+                : 10,
             left: 0,
             right: 0,
             child: CategoryFilterChips(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../controllers/usac_campus_map_controller.dart';
 import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
 import '../models/building_category.dart';
@@ -51,6 +52,7 @@ class UsacCampusMap extends StatefulWidget {
   final int panBuffer;
   final LatLngBounds? tileBounds;
   final String userAgentPackageName;
+  final UsacCampusMapController? controller;
   final MapController? mapController;
   final bool showRecenterCampusButton;
   final bool showLocationButton;
@@ -94,6 +96,7 @@ class UsacCampusMap extends StatefulWidget {
     this.panBuffer = 0,
     this.tileBounds,
     this.userAgentPackageName = 'gt.edu.usac.map',
+    this.controller,
     this.mapController,
     this.showRecenterCampusButton = true,
     this.showLocationButton = true,
@@ -109,7 +112,8 @@ class UsacCampusMap extends StatefulWidget {
 }
 
 class _UsacCampusMapState extends State<UsacCampusMap>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin
+    implements UsacCampusMapDelegate {
   MapController? _internalMapController;
   MapController get _effectiveMapController =>
       widget.mapController ?? (_internalMapController ??= MapController());
@@ -122,10 +126,13 @@ class _UsacCampusMapState extends State<UsacCampusMap>
   bool _bannerDismissed = false;
   AnimationController? _cameraAnimController;
   CampusRoute? _internalActiveRoute;
+  String? _highlightedBuildingId;
+  BuildingCategory? _controllerCategoryFilter;
 
   @override
   void initState() {
     super.initState();
+    widget.controller?.attach(this);
     _initTracking();
   }
 
@@ -162,6 +169,11 @@ class _UsacCampusMapState extends State<UsacCampusMap>
   @override
   void didUpdateWidget(covariant UsacCampusMap oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?.detach();
+      widget.controller?.attach(this);
+    }
+
     if (oldWidget.mapController != widget.mapController &&
         widget.mapController != null) {
       _internalMapController?.dispose();
@@ -179,6 +191,7 @@ class _UsacCampusMapState extends State<UsacCampusMap>
 
   @override
   void dispose() {
+    widget.controller?.detach();
     _cameraAnimController?.dispose();
     _locationSubscription?.cancel();
     _internalMapController?.dispose();
@@ -237,6 +250,62 @@ class _UsacCampusMapState extends State<UsacCampusMap>
     controller.forward();
   }
 
+  @override
+  void moveCamera(LatLng center, double zoom, {bool animate = true}) {
+    if (animate) {
+      _animatedMapMove(center, zoom);
+    } else {
+      _effectiveMapController.move(center, zoom);
+    }
+  }
+
+  @override
+  void fitBounds(
+    LatLngBounds bounds, {
+    EdgeInsets padding = const EdgeInsets.all(40),
+    bool animate = true,
+  }) {
+    _effectiveMapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: padding,
+      ),
+    );
+  }
+
+  @override
+  void setActiveRoute(CampusRoute? route) {
+    setState(() {
+      _internalActiveRoute = route;
+    });
+  }
+
+  @override
+  void setHighlightedBuilding(String? buildingId) {
+    setState(() {
+      _highlightedBuildingId = buildingId;
+    });
+  }
+
+  @override
+  void setCategoryFilter(BuildingCategory? category) {
+    setState(() {
+      _controllerCategoryFilter = category;
+    });
+  }
+
+  @override
+  LatLng? get currentUserLocation => _currentPosition;
+
+  @override
+  bool get isInsideCampus => _isInsideCampus;
+
+  @override
+  double get currentZoom => _effectiveMapController.camera.zoom;
+
+  @override
+  LatLng get currentCenter => _effectiveMapController.camera.center;
+
   CampusRoute? get _effectiveRoute {
     if (widget.activeRoute != null) {
       if (!UsacCampusBoundary.isInsideCampus(widget.activeRoute!.origin) ||
@@ -263,6 +332,7 @@ class _UsacCampusMapState extends State<UsacCampusMap>
     setState(() {
       _internalActiveRoute = null;
     });
+    widget.controller?.notifyRouteClearedFromUi();
     widget.onClearRoute?.call();
   }
 
@@ -293,9 +363,24 @@ class _UsacCampusMapState extends State<UsacCampusMap>
   }
 
   List<CampusBuilding> get _activeBuildings {
-    final source = widget.buildings != null && widget.buildings!.isNotEmpty
+    var source = widget.buildings != null && widget.buildings!.isNotEmpty
         ? List<CampusBuilding>.from(widget.buildings!)
         : List<CampusBuilding>.from(UsacCampusDataset.allBuildings);
+
+    if (_controllerCategoryFilter != null) {
+      source = source
+          .where((b) => b.category == _controllerCategoryFilter)
+          .toList();
+    }
+
+    final highlightId = _highlightedBuildingId;
+    if (highlightId != null) {
+      final hIndex = source.indexWhere((b) => b.id == highlightId);
+      if (hIndex != -1) {
+        final target = source.removeAt(hIndex);
+        source.add(target);
+      }
+    }
 
     final destId = _effectiveRoute?.destination.id;
     if (destId != null) {
@@ -401,6 +486,8 @@ class _UsacCampusMapState extends State<UsacCampusMap>
     final color = _getCategoryColor(building.category);
     final icon = _getCategoryIcon(building.category);
     final isDestination = _effectiveRoute?.destination.id == building.id;
+    final isHighlighted = _highlightedBuildingId == building.id;
+    final hasSpecialStatus = isDestination || isHighlighted;
 
     return GestureDetector(
       onTap: () {
@@ -421,26 +508,32 @@ class _UsacCampusMapState extends State<UsacCampusMap>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         decoration: BoxDecoration(
-          color: isDestination ? const Color(0xFFDC2626) : color,
+          color: isDestination
+              ? const Color(0xFFDC2626)
+              : (isHighlighted ? const Color(0xFF002B49) : color),
           shape: BoxShape.circle,
           border: Border.all(
-            color: isDestination ? const Color(0xFFFDE047) : Colors.white,
-            width: isDestination ? 3 : 2,
+            color: isDestination
+                ? const Color(0xFFFDE047)
+                : (isHighlighted ? const Color(0xFFF59E0B) : Colors.white),
+            width: hasSpecialStatus ? 3 : 2,
           ),
           boxShadow: [
             BoxShadow(
               color: isDestination
                   ? const Color(0x66DC2626)
-                  : Colors.black26,
-              blurRadius: isDestination ? 8 : 4,
+                  : (isHighlighted ? const Color(0x66002B49) : Colors.black26),
+              blurRadius: hasSpecialStatus ? 8 : 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Icon(
-          isDestination ? Icons.flag : icon,
+          isDestination
+              ? Icons.flag
+              : (isHighlighted ? Icons.stars : icon),
           color: Colors.white,
-          size: isDestination ? 22 : 20,
+          size: hasSpecialStatus ? 22 : 20,
         ),
       ),
     );
@@ -607,15 +700,20 @@ class _UsacCampusMapState extends State<UsacCampusMap>
           MarkerLayer(
             markers: [
               ..._activeBuildings.map(
-                (building) => Marker(
-                  point: building.location,
-                  width: 38,
-                  height: 38,
-                  child: RepaintBoundary(
-                    child: widget.markerBuilder?.call(context, building) ??
-                        _buildDefaultMarker(building),
-                  ),
-                ),
+                (building) {
+                  final isSpecial =
+                      _effectiveRoute?.destination.id == building.id ||
+                          _highlightedBuildingId == building.id;
+                  return Marker(
+                    point: building.location,
+                    width: isSpecial ? 44 : 38,
+                    height: isSpecial ? 44 : 38,
+                    child: RepaintBoundary(
+                      child: widget.markerBuilder?.call(context, building) ??
+                          _buildDefaultMarker(building),
+                    ),
+                  );
+                },
               ),
               if (_currentPosition != null)
                 Marker(

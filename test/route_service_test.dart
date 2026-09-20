@@ -83,5 +83,22 @@ void main() {
 
       expect(route, isNull);
     });
+
+    test('calculates route between two valid campus buildings directly', () {
+      final originBuilding = UsacCampusDataset.getById('t-3')!;
+      final destBuilding = UsacCampusDataset.getById('biblio-central')!;
+
+      final route = routeService.calculateRouteBetweenBuildings(
+        origin: originBuilding,
+        destination: destBuilding,
+      );
+
+      expect(route, isNotNull);
+      expect(route!.origin, equals(originBuilding.location));
+      expect(route.destination.id, equals('biblio-central'));
+      expect(route.points.first, equals(originBuilding.location));
+      expect(route.points.last, equals(destBuilding.location));
+      expect(route.distanceInMeters, greaterThan(50.0));
+    });
   });
 }
