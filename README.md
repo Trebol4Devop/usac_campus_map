@@ -1,12 +1,24 @@
 # usac_campus_map
 
-Libreria modular y privada en Flutter para la visualizacion interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC), delimitacion perimetral, consulta de puntos de interes (POIs) y seguimiento de geolocalizacion en tiempo real.
+Libreria modular y privada en Flutter para la visualizacion interactiva del mapa del Campus Central de la Universidad de San Carlos de Guatemala (USAC), delimitacion perimetral, recorte cartografico exclusivo, calculo de rutas peatonales por andadores, consulta de puntos de interes (POIs) y seguimiento de geolocalizacion en tiempo real.
+
+---
+
+## Caracteristicas Principales
+
+- **Cartografia Exclusiva del Campus Central:** Capacidad de recorte visual inverso (`clipToCampus`) que enmascara el exterior del campus y proyecta unicamente el area oficial universitaria con borde institucional azul USAC (`#002B49`).
+- **Navegacion y Delimitacion Espacial Estricta:** Restriccion de camara (`cameraConstraint`) y limite de descarga de teselas (`tileBounds`) a la extension exacta de la universidad (`exactCampusBounds`).
+- **Catalogo Oficial Georreferenciado:** Mas de 45 puntos de interes estructurados en 9 categorias tematicas con coordenadas exactas verificadas sobre OpenStreetMap.
+- **Enrutamiento Peatonal por Andadores (`CampusRouteService`):** Algoritmo de navegacion a pie guiado por la red de senderos y pasarelas internas del campus, calculando la distancia real y tiempo estimado de caminata.
+- **Geolocalizacion Reactiva e Inclusiva:** Deteccion satelital en tiempo real (`CampusLocationService`) con verificacion de permanencia en el campus mediante Ray Casting (`isInsideCampus`) y deteccion pasiva sin forzar solicitudes de permisos si el hardware esta desactivado.
+- **Buscador Inteligente y Filtros:** Busqueda por coincidencias difusas en nombres, siglas y facultades (`CampusSearchService`), complementado con selectores de categorias individuales o multiples.
+- **Componentes Modulares Reutilizables:** Widgets independientes (`UsacCampusMap`, `CampusSearchBar`, `CategoryFilterChips`, `BuildingDetailModal`) listos para ser ensamblados en cualquier aplicacion estudiantil o administrativa.
 
 ---
 
 ## Inventario Oficial de Edificios y Puntos Georreferenciados
 
-Actualmente la libreria cuenta con mas de 45 puntos de interes georreferenciados con exactitud de centroide sobre OpenStreetMap:
+La libreria cuenta con mas de 45 puntos de interes georreferenciados con exactitud de centroide:
 
 ### 1. Facultad de Arquitectura (FARUSAC)
 - **`T-1` (Talleres de Arquitectura):** Talleres de diseno arquitectonico, salones de dibujo tecnico, modelado y maquetas.
@@ -89,13 +101,15 @@ Actualmente la libreria cuenta con mas de 45 puntos de interes georreferenciados
 
 ---
 
-## Delimitacion Perimetral del Campus (`UsacCampusBoundary`)
+## Delimitacion Perimetral y Recorte Cartografico (`UsacCampusBoundary`)
 
-La libreria incorpora la delimitacion espacial del terreno de la universidad mediante un poligono de 74 vertices extraidos de los limites oficiales:
+La libreria incorpora la delimitacion espacial completa del terreno de la universidad mediante un poligono de 80 vertices georreferenciados:
 
-- **Propiedad `campusPerimeter`:** Lista inmutable `List<LatLng>` con el trazado perimetral completo del campus.
-- **Metodo `isInsideCampus(LatLng point)`:** Algoritmo de punto en poligono (Ray Casting) para determinar si las coordenadas de un dispositivo o punto estan dentro de los limites de la USAC.
-- **Propiedad `defaultPerimeterPolygon`:** Poligono estilizado con los colores institucionales para su renderizado directo en `flutter_map`.
+- **Propiedad `campusPerimeter`:** Lista inmutable `List<LatLng>` con el perimetro oficial del campus central.
+- **Metodo `isInsideCampus(LatLng point)`:** Algoritmo de punto en poligono (Ray Casting) para determinar si un dispositivo o coordenada esta dentro del territorio de la USAC.
+- **Metodo `createCampusCutoutMask(...)`:** Construye un poligono de mascara inversa que cubre el cuadrante exterior completo y perfora un orificio con los vertices de `campusPerimeter`, recortando el mapa al area universitaria con borde azul `#002B49`.
+- **Propiedad `defaultPerimeterPolygon`:** Poligono traslucido institucional para renderizado perimetral en `PolygonLayer`.
+- **Propiedad `exactCampusBounds`:** Caja delimitadora cartografica (`LatLngBounds`) ajustada al perimetro universitario (Suroeste: `[14.5760, -90.5605]`, Noreste: `[14.5905, -90.5445]`).
 
 ---
 
@@ -112,21 +126,27 @@ graph TD
         Barrel --> ModalWidget["BuildingDetailModal (Widget)"]
         Barrel --> BuildingModel["CampusBuilding (Model)"]
         Barrel --> CategoryEnum["BuildingCategory (Enum)"]
+        Barrel --> RouteModel["CampusRoute (Model)"]
         Barrel --> Dataset["UsacCampusDataset (Data Catalog)"]
-        Barrel --> Boundary["UsacCampusBoundary (Perimetro)"]
+        Barrel --> Boundary["UsacCampusBoundary (Delimitacion Espacial)"]
         Barrel --> LocationSvc["CampusLocationService (Service)"]
         Barrel --> SearchSvc["CampusSearchService (Service)"]
         Barrel --> DistanceSvc["CampusDistanceService (Service)"]
+        Barrel --> RouteSvc["CampusRouteService (Service)"]
         
-        UsacMapWidget -->|Consume Stream| LocationSvc
-        UsacMapWidget -->|Carga POIs por defecto| Dataset
-        UsacMapWidget -->|Capa de Poligonos| Boundary
+        UsacMapWidget -->|Consume Stream GPS| LocationSvc
+        UsacMapWidget -->|Carga POIs por Defecto| Dataset
+        UsacMapWidget -->|Mascara de Recorte y Limites| Boundary
+        UsacMapWidget -->|Calcula Ruta Peatonal| RouteSvc
+        RouteSvc -->|Calcula Metros y Tiempos| DistanceSvc
+        RouteSvc -->|Valida Limites de Origen/Destino| Boundary
         Dataset -->|Instancia| BuildingModel
         BuildingModel --> CategoryEnum
         UsacMapWidget -->|Renderiza Marcadores| BuildingModel
         ModalWidget -->|Calcula Metros y Tiempos| DistanceSvc
         SearchBarWidget -->|Dispara Consultas| SearchSvc
-        LocationSvc -->|GPS Hardware| GeolocatorPlugin["Geolocator Engine"]
+        LocationSvc -->|Verifica Pertenencia al Campus| Boundary
+        LocationSvc -->|Hardware GPS| GeolocatorPlugin["Geolocator Engine"]
         UsacMapWidget -->|Teselas OpenStreetMap| FlutterMapEngine["FlutterMap Engine"]
     end
 ```
@@ -162,6 +182,15 @@ classDiagram
         +CampusBuilding(id, name, location, description, acronym, category, floors)
     }
 
+    class CampusRoute {
+        +LatLng origin
+        +CampusBuilding destination
+        +List~LatLng~ points
+        +double distanceInMeters
+        +Duration estimatedDuration
+        +CampusRoute(origin, destination, points, distanceInMeters, estimatedDuration)
+    }
+
     class UsacCampusDataset {
         +LatLng campusCenter$
         +List~CampusBuilding~ allBuildings$
@@ -173,7 +202,9 @@ classDiagram
     class UsacCampusBoundary {
         +List~LatLng~ campusPerimeter$
         +isInsideCampus(LatLng point)$ bool
+        +createCampusCutoutMask(color, borderColor, borderStrokeWidth)$ Polygon
         +defaultPerimeterPolygon$ Polygon
+        +exactCampusBounds$ LatLngBounds
         +defaultCameraBounds$ LatLngBounds
     }
 
@@ -195,21 +226,38 @@ classDiagram
         +formatWalkingTime(duration) String
     }
 
+    class CampusRouteService {
+        +calculateRoute(origin, destination) CampusRoute?
+    }
+
     class UsacCampusMap {
         +List~CampusBuilding~? buildings
         +Function(CampusBuilding)? onBuildingTap
         +Widget Function(BuildContext, CampusBuilding)? markerBuilder
         +LatLng? initialCenter
         +double initialZoom
+        +double minZoom
+        +double maxZoom
         +bool showCampusBoundary
+        +bool clipToCampus
+        +Color campusCutoutColor
+        +List~Polygon~? customPolygons
+        +List~Polyline~? customPolylines
+        +CampusBuilding? routeDestination
+        +CampusRoute? activeRoute
+        +VoidCallback? onClearRoute
+        +Color routeColor
+        +double routeStrokeWidth
+        +bool animateCameraTransitions
+        +CameraConstraint? cameraConstraint
+        +bool showOutOfCampusBanner
+        +String? outOfCampusMessage
         +bool showRecenterCampusButton
         +bool showLocationButton
         +bool showZoomButtons
         +bool enableActiveTracking
-        +CampusBuilding? routeDestination
-        +List~Polyline~? customPolylines
-        +VoidCallback? onClearRoute
-        +bool animateCameraTransitions
+        +ValueChanged~LatLng~? onUserLocationTap
+        +ValueChanged~LatLng~? onUserLocationChanged
         +MapController? mapController
         +createState() _UsacCampusMapState
     }
@@ -225,6 +273,7 @@ classDiagram
         +BuildingCategory? selectedCategory
         +Set~BuildingCategory~? selectedCategories
         +ValueChanged~BuildingCategory?~? onCategorySelected
+        +ValueChanged~Set~BuildingCategory~~? onCategoriesChanged
         +bool isMultiSelect
     }
 
@@ -236,17 +285,23 @@ classDiagram
     }
 
     CampusBuilding --> BuildingCategory
+    CampusRoute --> CampusBuilding
+    CampusRouteService ..> CampusRoute : construye
+    CampusRouteService ..> CampusDistanceService : calcula metricas
+    CampusRouteService ..> UsacCampusBoundary : valida perimetro
     UsacCampusDataset --> CampusBuilding
-    UsacCampusMap ..> UsacCampusBoundary : renderiza perimetro
+    UsacCampusMap ..> UsacCampusBoundary : aplica mascara y limites
     UsacCampusMap ..> CampusBuilding : renderiza marcadores
-    UsacCampusMap ..> UsacCampusDataset : catalogo oficial
+    UsacCampusMap ..> CampusRouteService : calcula rutas
     BuildingDetailModal ..> CampusBuilding : presenta informacion
     BuildingDetailModal ..> CampusDistanceService : calcula distancias
 ```
 
 ---
 
-## Diagrama de Secuencia y Flujo de Datos
+## Diagramas de Secuencia y Flujo de Datos
+
+### Flujo 1: Busqueda y Filtrado Tematico de Edificios
 
 ```mermaid
 sequenceDiagram
@@ -254,64 +309,162 @@ sequenceDiagram
     actor Usuario
     participant SearchBar as CampusSearchBar
     participant Chips as CategoryFilterChips
-    participant MapWidget as UsacCampusMap
     participant SearchService as CampusSearchService
+    participant MapWidget as UsacCampusMap
     participant Modal as BuildingDetailModal
 
-    Usuario->>SearchBar: Ingresa termino de busqueda ("T-3")
+    Usuario->>SearchBar: Escribe termino ("T-3" o "Ingenieria")
     SearchBar->>SearchService: search(query: "T-3")
-    SearchService-->>Usuario: Lista filtrada de edificios
-    Usuario->>Chips: Selecciona filtro de categoria
+    SearchService-->>MapWidget: Lista filtrada de edificios
+    Usuario->>Chips: Selecciona chip de categoria (faculty)
     Chips->>SearchService: search(query: "T-3", category: faculty)
-    SearchService-->>MapWidget: Actualiza marcadores visibles
+    SearchService-->>MapWidget: Actualiza marcadores visibles en el mapa
     Usuario->>MapWidget: Toca marcador de edificio
-    MapWidget->>Modal: BuildingDetailModal.show(context, building)
-    Modal-->>Usuario: Ficha tecnica con distancias y tiempos a pie
-    Usuario->>MapWidget: Presiona boton flotante "Centrar Campus"
-    MapWidget->>MapWidget: Recentra camara en centroide USAC
+    MapWidget->>Modal: BuildingDetailModal.show(context, building, referencePosition)
+    Modal-->>Usuario: Ficha tecnica con distancia y tiempo a pie
+```
+
+### Flujo 2: Enrutamiento Peatonal por Andadores y Navegacion Activa
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Usuario
+    participant Modal as BuildingDetailModal
+    participant MapWidget as UsacCampusMap
+    participant RouteService as CampusRouteService
+    participant Boundary as UsacCampusBoundary
+
+    Usuario->>Modal: Presiona boton "Como llegar"
+    Modal->>MapWidget: Dispara callback onNavigate con destino
+    MapWidget->>RouteService: calculateRoute(origin: userLocation, destination: building)
+    RouteService->>Boundary: isInsideCampus(origin) & isInsideCampus(destination)
+    Boundary-->>RouteService: true (ambos puntos dentro del campus)
+    RouteService->>RouteService: Mapea trayectoria por red de andadores universitarios
+    RouteService-->>MapWidget: Instancia de CampusRoute (puntos, metros, tiempo)
+    MapWidget->>MapWidget: Dibuja Polyline institucional sobre el mapa
+    MapWidget->>MapWidget: Despliega tarjeta flotante de navegacion activa
+    MapWidget->>MapWidget: Anima camara encuadrando la ruta completa
+    Usuario->>MapWidget: Presiona icono cerrar en tarjeta de navegacion
+    MapWidget->>MapWidget: Limpia la ruta activa y restablece vista
 ```
 
 ---
 
-## Ejemplo de Uso
+## Referencia de API
+
+### 1. [`UsacCampusMap`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/lib/src/widgets/usac_campus_map.dart)
+Widget principal que encapsula el motor cartografico `flutter_map` con configuraciones preestablecidas de alto rendimiento:
+- `clipToCampus`: Booleano (`true` por defecto) que activa la mascara poligonal inversa para recortar el mapa al perimetro del campus.
+- `campusCutoutColor`: Color del area exterior recortada (por defecto `Colors.white`).
+- `cameraConstraint`: Restriccion de camara (`exactCampusBounds` por defecto) que previene el desplazamiento fuera del campus.
+- `routeDestination`: Edificio destino para trazar ruta peatonal automatica desde la ubicacion actual del usuario.
+- `activeRoute`: Instancia personalizada de `CampusRoute` inyectada directamente al mapa.
+- `onClearRoute`: Callback disparado al descartar la ruta activa desde la tarjeta flotante.
+- `routeColor`: Color de la polilinea de ruta (por defecto `#002B49`).
+- `routeStrokeWidth`: Grosor de la linea de ruta (por defecto `4.5 px`).
+- `markerBuilder`: Builder opcional para inyectar disenos personalizados en los marcadores de edificios.
+- `showRecenterCampusButton`: Muestra boton flotante para recentrar el mapa en el centroide universitario.
+- `showLocationButton`: Muestra boton flotante de geolocalizacion satelital.
+- `enableActiveTracking`: Mantiene la camara centrada continuamente en la posicion del usuario mientras se desplaza.
+
+### 2. [`CampusRouteService`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/lib/src/services/route_service.dart)
+Servicio especializado en navegacion peatonal interna:
+- `calculateRoute({required LatLng origin, required CampusBuilding destination})`: Calcula la trayectoria caminando por los andadores principales del campus, validando que el origen y destino se encuentren dentro del perimetro universitario. Retorna `CampusRoute?`.
+
+### 3. [`UsacCampusBoundary`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/lib/src/data/usac_campus_boundary.dart)
+Modulo de delimitacion geometrica y espacial:
+- `isInsideCampus(LatLng point)`: Determina si una coordenada geografica esta contenida dentro del perimetro universitario.
+- `createCampusCutoutMask(...)`: Genera el poligono de mascara inversa con orificio para recorte cartografico.
+- `exactCampusBounds`: Bounding box que enmarca de forma ceñida la superficie universitaria.
+
+### 4. [`CampusDistanceService`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/lib/src/services/distance_service.dart)
+Servicio de mediciones metricas y tiempos:
+- `calculateDistance(LatLng point1, LatLng point2)`: Distancia Haversine en metros.
+- `estimateWalkingDuration(double distanceMeters)`: Estimacion de tiempo a pie a velocidad media universitaria (1.2 m/s).
+- `formatDistance(double distanceMeters)`: Retorna formato legible (ej. "450 m" o "1.2 km").
+- `formatWalkingTime(Duration duration)`: Retorna tiempo formateado (ej. "6 min" o "1 h 12 min").
+
+### 5. [`CampusSearchService`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/lib/src/services/search_service.dart)
+Motor de busqueda y filtrado:
+- `search({String? query, BuildingCategory? category, Set<BuildingCategory>? categories, List<CampusBuilding>? source})`: Busqueda insensible a mayusculas y tildes con soporte de categorias unicas o multiples.
+
+---
+
+## Ejemplo Completo de Integracion
 
 ```dart
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
   runApp(const MaterialApp(home: CampusScreen()));
 }
 
-class CampusScreen extends StatelessWidget {
+class CampusScreen extends StatefulWidget {
   const CampusScreen({super.key});
 
   @override
+  State<CampusScreen> createState() => _CampusScreenState();
+}
+
+class _CampusScreenState extends State<CampusScreen> {
+  final CampusSearchService _searchService = CampusSearchService();
+  BuildingCategory? _selectedCategory;
+  String _searchQuery = '';
+  CampusBuilding? _navigatingDestination;
+  LatLng? _currentUserLocation;
+
+  @override
   Widget build(BuildContext context) {
+    final buildings = _searchService.search(
+      query: _searchQuery,
+      category: _selectedCategory,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Central USAC'),
+        backgroundColor: const Color(0xFF002B49),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: CampusSearchBar(
-            hintText: 'Buscar edificio o facultad...',
-            onChanged: (query) {
-              // Actualizar estado de busqueda
-            },
+            hintText: 'Buscar edificio (T-3, S-2, Rectoria)...',
+            onChanged: (val) => setState(() => _searchQuery = val),
           ),
         ),
       ),
-      body: UsacCampusMap(
-        showCampusBoundary: true,
-        showRecenterCampusButton: true,
-        showLocationButton: true,
-        showZoomButtons: true,
-        onBuildingTap: (building) {
-          BuildingDetailModal.show(
-            context: context,
-            building: building,
-          );
-        },
+      body: Stack(
+        children: [
+          UsacCampusMap(
+            buildings: buildings,
+            clipToCampus: true,
+            routeDestination: _navigatingDestination,
+            onClearRoute: () => setState(() => _navigatingDestination = null),
+            onUserLocationChanged: (loc) => setState(() => _currentUserLocation = loc),
+            onBuildingTap: (building) {
+              BuildingDetailModal.show(
+                context: context,
+                building: building,
+                referencePosition: _currentUserLocation,
+                onNavigate: () {
+                  Navigator.of(context).pop();
+                  setState(() => _navigatingDestination = building);
+                },
+              );
+            },
+          ),
+          Positioned(
+            top: _navigatingDestination != null ? 76 : 10,
+            left: 0,
+            right: 0,
+            child: CategoryFilterChips(
+              selectedCategory: _selectedCategory,
+              onCategorySelected: (cat) => setState(() => _selectedCategory = cat),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -322,15 +475,13 @@ class CampusScreen extends StatelessWidget {
 
 ## Aplicacion de Demostracion (`example/`)
 
-El subproyecto en `example/` integra todos los componentes de la libreria:
-- `CampusSearchBar`: Buscador interactivo por nombre, acronimo y facultades asociadas.
-- `CategoryFilterChips`: Barra horizontal de seleccion de categorias tematicas.
-- `UsacCampusMap`: Mapa reactivo con controles flotantes de recentrado, ubicacion GPS y zoom.
-- `BuildingDetailModal`: Ficha tecnica desplegable con calculo automatico de distancias Haversine y tiempos de caminata estimados por andadores peatonales.
-- **Navegacion Visual de Ruta (`PolylineLayer`):** Trazado de ruta activa entre la posicion del usuario y el edificio seleccionado con panel flotante de navegacion.
-- **Transiciones Cinematograficas de Camara:** Movimientos fluidos y amortiguados (`CurvedAnimation`) al enfocar destinos o recentrar el campus.
+El subproyecto en [`example/`](file:///C:/Users/emanu/Desktop/Programacion/ProyectosUniversidad/2025/Proyectos/usac_campus_map/example) integra todos los componentes de la libreria en una aplicacion completa:
+- `CampusSearchBar`: Buscador interactivo por nombre, sigla y dependencias asociadas.
+- `CategoryFilterChips`: Barra deslizable de seleccion tematica por categoria.
+- `UsacCampusMap`: Mapa reactivo con mascara de recorte perimetral, navegacion por andadores y controles flotantes.
+- `BuildingDetailModal`: Ficha descriptiva modal con metricas de proximidad y accionador de navegacion guiada.
 
-Para ejecutarla en su dispositivo:
+Para ejecutarla:
 ```bash
 cd example
 flutter run
@@ -338,7 +489,18 @@ flutter run
 
 ---
 
+## Suite de Pruebas Automatizadas
+
+La libreria cuenta con una suite completa de pruebas unitarias y de widgets que cubren todos los servicios y componentes visuales:
+```bash
+flutter test
+cd example && flutter test
+```
+
+---
+
 ## Licencia y Confidencialidad
 
 Propiedad privada y confidencial de Trebol4Devop. Todos los derechos reservados.
-Consulte el archivo `LICENSE` para mas detalles.
+Prohibida su distribucion, copia o modificacion sin autorizacion expresa.
+Consulte el archivo `LICENSE` para conocer los terminos de propiedad intelectual.
