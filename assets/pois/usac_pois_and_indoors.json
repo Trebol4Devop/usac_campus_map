@@ -1,0 +1,492 @@
+{
+  "buildings": [
+    {
+      "building_id": "t-3",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "t3-cajero-5b",
+              "name": "Cajero 5B Ingeniería",
+              "code": "ATM-5B-T3",
+              "floor_level": 1,
+              "category": "cajeros",
+              "aliases": ["Cajero 5B", "Cajero T3", "5B Ingenieria", "ATM"]
+            },
+            {
+              "id": "t3-cafeteria",
+              "name": "Cafetería Central de Ingeniería",
+              "code": "CAF-T3",
+              "floor_level": 1,
+              "category": "cafeterias",
+              "aliases": ["Cafeta T3", "Comida Ingenieria", "Cafe FIUSAC"]
+            },
+            {
+              "id": "t3-sanitarios-l1",
+              "name": "Sanitarios Nivel 1",
+              "code": "WC-T3-1",
+              "floor_level": 1,
+              "category": "sanitarios",
+              "aliases": ["Banos T3", "Banos Ingenieria", "Servicios Sanitarios"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "t3-decanatura",
+              "name": "Decanatura de Ingeniería",
+              "code": "DEC-FIUSAC",
+              "floor_level": 2,
+              "category": "oficinas",
+              "aliases": ["Decanato FIUSAC", "Oficina Decano", "Direccion Ingenieria"]
+            },
+            {
+              "id": "t3-lab-computo-1",
+              "name": "Laboratorio de Computación 1 (DTT)",
+              "code": "LAB-COMP-1",
+              "floor_level": 2,
+              "category": "laboratorios",
+              "aliases": ["Lab Comp 1", "DTT", "Salas de Computo T3"]
+            },
+            {
+              "id": "t3-aula-201",
+              "name": "Salón 201 T-3",
+              "code": "201",
+              "floor_level": 2,
+              "category": "aulas",
+              "aliases": ["Salon 201", "Aula 201"]
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "name": "Nivel 3",
+          "pois": [
+            {
+              "id": "t3-escuela-sistemas",
+              "name": "Escuela de Ciencias y Sistemas (ECYS)",
+              "code": "ECYS",
+              "floor_level": 3,
+              "category": "oficinas",
+              "aliases": ["Sistemas", "ECYS", "Escuela de Sistemas", "Direccion Sistemas"]
+            },
+            {
+              "id": "t3-escuela-civil",
+              "name": "Escuela de Ingeniería Civil",
+              "code": "CIVIL",
+              "floor_level": 3,
+              "category": "oficinas",
+              "aliases": ["Civil", "Direccion Civil"]
+            },
+            {
+              "id": "t3-aula-305",
+              "name": "Salón 305 T-3",
+              "code": "305",
+              "floor_level": 3,
+              "category": "aulas",
+              "aliases": ["Salon 305", "Aula 305"]
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "name": "Nivel 4",
+          "pois": [
+            {
+              "id": "t3-escuela-mecanica",
+              "name": "Escuela de Ingeniería Mecánica",
+              "code": "MECANICA",
+              "floor_level": 4,
+              "category": "oficinas",
+              "aliases": ["Mecanica", "Direccion Mecanica"]
+            },
+            {
+              "id": "t3-aula-410",
+              "name": "Salón Magno 410 T-3",
+              "code": "410",
+              "floor_level": 4,
+              "category": "aulas",
+              "aliases": ["Salon 410", "Aula Magna FIUSAC", "Auditorio T3"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "t-1",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "t1-taller-maquetas",
+              "name": "Taller de Maquetas Arquitectura",
+              "code": "TAL-MAQ-T1",
+              "floor_level": 1,
+              "category": "laboratorios",
+              "aliases": ["Taller de Maquetas", "Maquetas Arqui", "Lab Maquetas"]
+            },
+            {
+              "id": "t1-cafeteria",
+              "name": "Cafetería FARUSAC",
+              "code": "CAF-T1",
+              "floor_level": 1,
+              "category": "cafeterias",
+              "aliases": ["Cafeteria Arqui", "Cafeta FARUSAC"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "t1-aula-dibujo-201",
+              "name": "Taller de Dibujo Técnico 201",
+              "code": "DIB-201",
+              "floor_level": 2,
+              "category": "aulas",
+              "aliases": ["Taller 201", "Dibujo 201", "Salon 201 T1"]
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "name": "Nivel 3",
+          "pois": [
+            {
+              "id": "t1-aula-diseno-301",
+              "name": "Taller de Diseño Arquitectónico 301",
+              "code": "DIS-301",
+              "floor_level": 3,
+              "category": "aulas",
+              "aliases": ["Taller Diseno 301", "Salon 301 T1"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "s-2",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "s2-cajero-bac",
+              "name": "Cajero BAC Derecho",
+              "code": "ATM-BAC-S2",
+              "floor_level": 1,
+              "category": "cajeros",
+              "aliases": ["Cajero BAC", "Cajero S2", "BAC Derecho", "ATM BAC"]
+            },
+            {
+              "id": "s2-bufete-popular",
+              "name": "Bufete Popular USAC",
+              "code": "BUF-POP",
+              "floor_level": 1,
+              "category": "oficinas",
+              "aliases": ["Bufete", "Asesoria Juridica", "Bufete Popular Derecho"]
+            },
+            {
+              "id": "s2-sanitarios",
+              "name": "Sanitarios Planta Baja S-2",
+              "code": "WC-S2-1",
+              "floor_level": 1,
+              "category": "sanitarios",
+              "aliases": ["Banos S2", "Banos Derecho"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "s2-salon-juicios",
+              "name": "Sala de Juicios Orales Simulados",
+              "code": "SALA-JUICIOS",
+              "floor_level": 2,
+              "category": "aulas",
+              "aliases": ["Sala de Juicios", "Juicios Orales", "Tribunal Simulado"]
+            },
+            {
+              "id": "s2-aula-205",
+              "name": "Salón 205 Derecho",
+              "code": "205-S2",
+              "floor_level": 2,
+              "category": "aulas",
+              "aliases": ["Salon 205", "Aula 205 S2"]
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "name": "Nivel 3",
+          "pois": [
+            {
+              "id": "s2-decanatura",
+              "name": "Decanatura de Ciencias Jurídicas y Sociales",
+              "code": "DEC-DER",
+              "floor_level": 3,
+              "category": "oficinas",
+              "aliases": ["Decanato Derecho", "Decanatura S2"]
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "name": "Nivel 4",
+          "pois": [
+            {
+              "id": "s2-posgrados",
+              "name": "Escuela de Posgrados de Derecho",
+              "code": "POSG-DER",
+              "floor_level": 4,
+              "category": "oficinas",
+              "aliases": ["Posgrados Derecho", "Maestrias Derecho"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "s-12",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "s12-secretaria",
+              "name": "Secretaría Académica EFPEM",
+              "code": "SEC-EFPEM",
+              "floor_level": 1,
+              "category": "oficinas",
+              "aliases": ["Secretaria S12", "Atencion EFPEM"]
+            },
+            {
+              "id": "s12-cafeteria",
+              "name": "Cafetería EFPEM S-12",
+              "code": "CAF-S12",
+              "floor_level": 1,
+              "category": "cafeterias",
+              "aliases": ["Cafeta S12", "Cafeteria EFPEM"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "s12-lab-ciencias",
+              "name": "Laboratorio de Ciencias Integradas EFPEM",
+              "code": "LAB-CIEN-S12",
+              "floor_level": 2,
+              "category": "laboratorios",
+              "aliases": ["Lab Ciencias S12", "Laboratorio EFPEM"]
+            },
+            {
+              "id": "s12-aula-204",
+              "name": "Salón 204 S-12",
+              "code": "204-S12",
+              "floor_level": 2,
+              "category": "aulas",
+              "aliases": ["Salon 204 S12", "Aula 204"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "biblio-central",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "biblio-sala-general",
+              "name": "Sala General de Lectura César Brañas",
+              "code": "SAL-GEN-BIBLIO",
+              "floor_level": 1,
+              "category": "bibliotecas",
+              "aliases": ["Sala de Lectura", "Biblioteca Central", "Lectura Biblio"]
+            },
+            {
+              "id": "biblio-sanitarios",
+              "name": "Sanitarios Biblioteca Central",
+              "code": "WC-BIBLIO",
+              "floor_level": 1,
+              "category": "sanitarios",
+              "aliases": ["Banos Biblioteca", "Sanitarios Biblio"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "biblio-hemeroteca",
+              "name": "Hemeroteca Universitaria",
+              "code": "HEMEROTECA",
+              "floor_level": 2,
+              "category": "bibliotecas",
+              "aliases": ["Hemeroteca", "Periodicos USAC", "Archivo Hemerografico"]
+            },
+            {
+              "id": "biblio-sala-virtual",
+              "name": "Sala de Cómputo e Investigación Digital",
+              "code": "SALA-DIGITAL",
+              "floor_level": 2,
+              "category": "laboratorios",
+              "aliases": ["Computo Biblioteca", "Sala Virtual Biblio"]
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "name": "Nivel 3",
+          "pois": [
+            {
+              "id": "biblio-sala-tesis",
+              "name": "Repositorio de Tesis y Archivo Histórico",
+              "code": "TESIS",
+              "floor_level": 3,
+              "category": "bibliotecas",
+              "aliases": ["Tesis USAC", "Sala de Tesis", "Archivo Historico"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "iglu",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "iglu-auditorio",
+              "name": "Auditorio Principal El Iglú",
+              "code": "AUD-IGLU",
+              "floor_level": 1,
+              "category": "auditorios",
+              "aliases": ["El Iglu", "Auditorio Iglu", "Bienestar Estudiantil", "Graduaciones Iglu"]
+            },
+            {
+              "id": "iglu-bienestar-admin",
+              "name": "Oficinas de Bienestar Estudiantil",
+              "code": "BIENESTAR-OF",
+              "floor_level": 1,
+              "category": "oficinas",
+              "aliases": ["Bienestar Estudiantil", "Atencion al Estudiante"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "rectoria",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Nivel 1",
+          "pois": [
+            {
+              "id": "rectoria-recepcion",
+              "name": "Recepción y Atención al Público Rectoría",
+              "code": "REC-RECT",
+              "floor_level": 1,
+              "category": "oficinas",
+              "aliases": ["Rectoria", "Recepcion Rectoria"]
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "name": "Nivel 2",
+          "pois": [
+            {
+              "id": "rectoria-csu",
+              "name": "Salón Mayor del CSU",
+              "code": "SALA-CSU",
+              "floor_level": 2,
+              "category": "oficinas",
+              "aliases": ["CSU", "Consejo Superior Universitario", "Salon CSU"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "building_id": "plaza-martires",
+      "floors": [
+        {
+          "level": 1,
+          "name": "Explanada",
+          "pois": [
+            {
+              "id": "plaza-banderas",
+              "name": "Asta Monumental Las Banderas",
+              "code": "BANDERAS",
+              "floor_level": 1,
+              "category": "monumentos",
+              "aliases": ["Las Banderas", "Plaza de los Martires", "Plaza Central"]
+            },
+            {
+              "id": "garita-periferico-entrada",
+              "name": "Garita Periférico (Ingreso Vehicular)",
+              "code": "GAR-PER-IN",
+              "floor_level": 1,
+              "category": "garitas",
+              "aliases": ["Garita Periferico", "Entrada Periferico", "Ingreso Periferico", "Garita Norte"]
+            },
+            {
+              "id": "garita-periferico-salida",
+              "name": "Garita Periférico (Salida Vehicular)",
+              "code": "GAR-PER-OUT",
+              "floor_level": 1,
+              "category": "garitas",
+              "aliases": ["Salida Periferico", "Salida Norte"]
+            },
+            {
+              "id": "garita-petapa-entrada",
+              "name": "Garita Avenida Petapa (Ingreso Vehicular)",
+              "code": "GAR-PET-IN",
+              "floor_level": 1,
+              "category": "garitas",
+              "aliases": ["Garita Petapa", "Entrada Petapa", "Ingreso Petapa", "32 Calle"]
+            },
+            {
+              "id": "garita-petapa-salida",
+              "name": "Garita Avenida Petapa (Salida Vehicular)",
+              "code": "GAR-PET-OUT",
+              "floor_level": 1,
+              "category": "garitas",
+              "aliases": ["Salida Petapa", "35 Calle"]
+            },
+            {
+              "id": "garita-las-charcas",
+              "name": "Garita Las Charcas / 29 Calle (Acceso Suroeste)",
+              "code": "GAR-CHAR",
+              "floor_level": 1,
+              "category": "garitas",
+              "aliases": ["Garita Charcas", "Las Charcas", "29 Calle", "Acceso Sur"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

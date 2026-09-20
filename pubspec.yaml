@@ -18,3 +18,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+
+flutter:
+  assets:
+    - assets/geojson/
+    - assets/graph/
+    - assets/pois/

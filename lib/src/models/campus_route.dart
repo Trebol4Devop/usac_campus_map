@@ -1,18 +1,43 @@
 import 'package:latlong2/latlong.dart';
-import 'campus_building.dart';
+import 'campus_edge.dart';
+import 'campus_node.dart';
+import 'navigation_mode.dart';
+
+class RouteStep {
+  final String instruction;
+  final double distance;
+  final String type;
+  final LatLng location;
+
+  const RouteStep({
+    required this.instruction,
+    required this.distance,
+    required this.type,
+    required this.location,
+  });
+}
 
 class CampusRoute {
-  final LatLng origin;
-  final CampusBuilding destination;
   final List<LatLng> points;
-  final double distanceInMeters;
-  final Duration estimatedDuration;
+  final List<CampusNode> nodes;
+  final List<CampusEdge> edges;
+  final double totalDistance;
+  final double estimatedTimeMinutes;
+  final NavigationMode mode;
+  final List<RouteStep> steps;
 
   const CampusRoute({
-    required this.origin,
-    required this.destination,
     required this.points,
-    required this.distanceInMeters,
-    required this.estimatedDuration,
+    required this.nodes,
+    required this.edges,
+    required this.totalDistance,
+    required this.estimatedTimeMinutes,
+    required this.mode,
+    this.steps = const [],
   });
+
+  bool get hasStairs => edges.any((e) => e.type == 'stairs');
+
+  bool get isCoveredOnly =>
+      edges.isNotEmpty && edges.every((e) => e.type == 'covered');
 }

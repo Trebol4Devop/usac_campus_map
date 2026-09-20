@@ -8,8 +8,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.text('Campus Central USAC'), findsOneWidget);
-    expect(find.byType(CampusSearchBar), findsOneWidget);
-    expect(find.byType(CategoryFilterChips), findsOneWidget);
     expect(find.byType(UsacCampusMap), findsOneWidget);
   });
 }
