@@ -1,12 +1,15 @@
 import 'package:latlong2/latlong.dart';
 import '../models/building_category.dart';
+import '../models/building_entrance.dart';
 import '../models/campus_building.dart';
+import '../models/walkway_type.dart';
+import 'usac_building_footprints.dart';
 
 class UsacCampusDataset {
   static const LatLng campusCenter = LatLng(14.5868, -90.5518);
 
-  static const List<CampusBuilding> allBuildings = [
-    CampusBuilding(
+  static final List<CampusBuilding> allBuildings = [
+    const CampusBuilding(
       id: 't-1',
       name: 'Edificio T-1 (Facultad de Arquitectura)',
       acronym: 'T-1',
@@ -14,8 +17,24 @@ class UsacCampusDataset {
       description: 'Talleres de diseno arquitectonico, aulas de dibujo, maquetas y salones de FARUSAC.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't1-sur',
+          name: 'Puerta Principal Sur (Pasillo Interfacultades)',
+          location: LatLng(14.588576, -90.553156),
+          type: EntranceType.corridor,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 't1-norte',
+          name: 'Puerta Norte (Parqueo de Arquitectura)',
+          location: LatLng(14.588912, -90.552725),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-2',
       name: 'Edificio T-2 (Facultad de Arquitectura)',
       acronym: 'T-2',
@@ -23,8 +42,17 @@ class UsacCampusDataset {
       description: 'Sede central de FARUSAC, Decanatura de Arquitectura, Direccion de Diseno Grafico y administracion.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't2-principal',
+          name: 'Puerta Principal (Pasillo Central)',
+          location: LatLng(14.588277, -90.552755),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-3',
       name: 'Edificio T-3 (Facultad de Ingenieria)',
       acronym: 'T-3',
@@ -32,8 +60,24 @@ class UsacCampusDataset {
       description: 'Decanatura de Ingenieria, Escuelas de Civil, Mecanica, salas de computo y direccion de FIUSAC.',
       category: BuildingCategory.faculty,
       floors: 4,
+      entrances: [
+        BuildingEntrance(
+          id: 't3-oriente',
+          name: 'Puerta Oriente (Plaza de los Martires)',
+          location: LatLng(14.587744, -90.553176),
+          type: EntranceType.plaza,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 't3-poniente',
+          name: 'Puerta Poniente (Parqueo de Ingenieria)',
+          location: LatLng(14.587760, -90.553284),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-4',
       name: 'Edificio T-4 (Ingenieria Quimica e Industrial)',
       acronym: 'T-4',
@@ -41,17 +85,49 @@ class UsacCampusDataset {
       description: 'Escuelas de Ingenieria Quimica, Ingenieria Industrial y Coordinacion de EPS.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't4-principal',
+          name: 'Puerta Principal (Cancha de Ingenieria)',
+          location: LatLng(14.587260, -90.552920),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 't4-norte',
+          name: 'Acceso Pasillo T-6 y T-3',
+          location: LatLng(14.587260, -90.553150),
+          type: EntranceType.corridor,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-6',
       name: 'Edificio T-6 (Aulas de Ingenieria)',
       acronym: 'T-6',
-      location: LatLng(14.587106, -90.553279),
+      location: LatLng(14.587106, -90.553150),
       description: 'Modulo de catedra y aulas docentes de la Facultad de Ingenieria.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't6-principal',
+          name: 'Puerta Pasillo Central (T-4 / T-7)',
+          location: LatLng(14.587106, -90.553150),
+          type: EntranceType.corridor,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 't6-sur',
+          name: 'Puerta Sur (Eje IGLU)',
+          location: LatLng(14.586860, -90.553534),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-7',
       name: 'Edificio T-7 (Talleres de Ingenieria Mecanica)',
       acronym: 'T-7',
@@ -59,8 +135,17 @@ class UsacCampusDataset {
       description: 'Talleres de maquinas herramientas, procesos de manufactura, soldadura y fundicion.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 't7-principal',
+          name: 'Puerta Principal de Talleres',
+          location: LatLng(14.586763, -90.553974),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'cii',
       name: 'Centro de Investigaciones de Ingenieria (CII)',
       acronym: 'CII',
@@ -68,8 +153,17 @@ class UsacCampusDataset {
       description: 'Investigacion cientifica, desarrollo tecnologico y ensayos estructurales aplicados.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 'cii-principal',
+          name: 'Acceso Principal CII',
+          location: LatLng(14.585747, -90.554277),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'eris',
       name: 'ERIS (Escuela Regional de Ingenieria Sanitaria)',
       acronym: 'ERIS',
@@ -77,8 +171,17 @@ class UsacCampusDataset {
       description: 'Posgrados en ingenieria sanitaria, recursos hidricos y saneamiento ambiental.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'eris-principal',
+          name: 'Puerta Principal ERIS',
+          location: LatLng(14.584354, -90.557400),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-8',
       name: 'Edificio T-8 (Facultad de Agronomia)',
       acronym: 'T-8',
@@ -86,8 +189,24 @@ class UsacCampusDataset {
       description: 'Secretaria Academica de Agronomia, aulas de ensenanza y coordinaciones de FAUSAC.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 't8-principal',
+          name: 'Puerta Principal (Eje IGLU / Plaza)',
+          location: LatLng(14.585161, -90.553490),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 't8-oriente',
+          name: 'Puerta Oriente (hacia T-9)',
+          location: LatLng(14.584928, -90.552548),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-9',
       name: 'Edificio T-9 (Facultad de Agronomia)',
       acronym: 'T-9',
@@ -95,8 +214,17 @@ class UsacCampusDataset {
       description: 'Decanatura de Agronomia, administracion central y departamentos tecnicos de FAUSAC.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't9-principal',
+          name: 'Puerta Principal (Plazoleta Agronomia)',
+          location: LatLng(14.584928, -90.552548),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'uviger',
       name: 'UVIGER (Laboratorios de Agronomia)',
       acronym: 'UVIGER',
@@ -104,8 +232,17 @@ class UsacCampusDataset {
       description: 'Laboratorios de investigacion de suelos, fitopatologia, biotecnologia y gestion de recursos.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'uviger-principal',
+          name: 'Acceso Principal UVIGER',
+          location: LatLng(14.582901, -90.553210),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'ceda',
       name: 'CEDA (Centro Experimental Docente de Agronomia)',
       acronym: 'CEDA',
@@ -113,8 +250,17 @@ class UsacCampusDataset {
       description: 'Campos de practica agricola, invernaderos, viveros y parcelas demostrativas.',
       category: BuildingCategory.faculty,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'ceda-principal',
+          name: 'Acceso Principal CEDA',
+          location: LatLng(14.579067, -90.556157),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-10',
       name: 'Edificio T-10 (Escuela de Biologia)',
       acronym: 'T-10',
@@ -122,8 +268,17 @@ class UsacCampusDataset {
       description: 'Escuela de Biologia de la Facultad de Ciencias Quimicas y Farmacia, laboratorios biologicos.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't10-principal',
+          name: 'Puerta Principal Biologia',
+          location: LatLng(14.584957, -90.554514),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-11',
       name: 'Edificio T-11 (Escuela de Nutricion)',
       acronym: 'T-11',
@@ -131,8 +286,17 @@ class UsacCampusDataset {
       description: 'Escuela de Nutricion de la Facultad de Ciencias Quimicas y Farmacia y laboratorios de alimentos.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't11-principal',
+          name: 'Puerta Principal Nutricion',
+          location: LatLng(14.584476, -90.553588),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-13',
       name: 'Edificio T-13 (Planta Piloto de Farmacia)',
       acronym: 'T-13',
@@ -140,8 +304,17 @@ class UsacCampusDataset {
       description: 'Planta piloto de transformacion farmaceutica, control de calidad y medicamentos.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 't13-principal',
+          name: 'Puerta Principal Farmacia',
+          location: LatLng(14.583729, -90.554484),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-14',
       name: 'Edificio T-14 (Laboratorios Especializados Farmacia)',
       acronym: 'T-14',
@@ -149,8 +322,17 @@ class UsacCampusDataset {
       description: 'Laboratorios de investigacion y ensayos analiticos quimico-farmaceuticos.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 't14-principal',
+          name: 'Puerta Principal Laboratorios',
+          location: LatLng(14.583839, -90.557159),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 't-15',
       name: 'Edificio T-15 (Facultad de CC.QQ. y Farmacia)',
       acronym: 'T-15',
@@ -158,8 +340,17 @@ class UsacCampusDataset {
       description: 'Sede central y Decanatura de Ciencias Quimicas y Farmacia, auditorio principal.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 't15-principal',
+          name: 'Puerta Principal CC.QQ. y Farmacia',
+          location: LatLng(14.583998, -90.553209),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'fisica-mate',
       name: 'Escuela de Ciencias Fisicas y Matematicas',
       acronym: 'ECFM',
@@ -167,8 +358,17 @@ class UsacCampusDataset {
       description: 'Edificio academico de carreras de fisica pura y matematica aplicada.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'fisica-mate-principal',
+          name: 'Puerta Principal Fisica y Matematica',
+          location: LatLng(14.588304, -90.553595),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'm-1',
       name: 'Edificio M-1 (Facultad de Odontologia)',
       acronym: 'M-1',
@@ -176,8 +376,24 @@ class UsacCampusDataset {
       description: 'Decanatura de Odontologia, aulas magnas y salones docentes de la carrera dental.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 'm1-principal',
+          name: 'Puerta Principal Odontologia',
+          location: LatLng(14.588480, -90.549564),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 'm1-oriente',
+          name: 'Puerta Oriente (hacia M-2 y Petapa)',
+          location: LatLng(14.588409, -90.549014),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'm-2',
       name: 'Edificio M-2 (Clinicas Odontologicas)',
       acronym: 'M-2',
@@ -185,8 +401,17 @@ class UsacCampusDataset {
       description: 'Clinicas integrales de atencion dental para la poblacion y practicas clinicas.',
       category: BuildingCategory.health,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 'm2-principal',
+          name: 'Puerta Principal Clinicas Odontologicas',
+          location: LatLng(14.588409, -90.549014),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'm-3',
       name: 'Edificio M-3 (Laboratorios de Odontologia)',
       acronym: 'M-3',
@@ -194,8 +419,17 @@ class UsacCampusDataset {
       description: 'Laboratorios de protesis dental, biomateriales, ortodoncia y radiologia.',
       category: BuildingCategory.health,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'm3-principal',
+          name: 'Puerta Principal Laboratorios',
+          location: LatLng(14.588030, -90.549693),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'm-8',
       name: 'Hospital Veterinario Universitario (HVAC)',
       acronym: 'M-8',
@@ -203,17 +437,43 @@ class UsacCampusDataset {
       description: 'Hospital veterinario universitario de la Facultad de Veterinaria y Zootecnia.',
       category: BuildingCategory.health,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'm8-principal',
+          name: 'Acceso Principal Hospital Veterinario',
+          location: LatLng(14.583682, -90.556069),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
     CampusBuilding(
       id: 's-2',
       name: 'Edificio S-2 (Ciencias Juridicas y Sociales)',
       acronym: 'S-2',
-      location: LatLng(14.587044, -90.550059),
+      location: const LatLng(14.587044, -90.550059),
       description: 'Facultad de Derecho, decanatura, bufete popular, salas de juicios orales simulados.',
       category: BuildingCategory.faculty,
       floors: 4,
+      polygonFootprint: UsacBuildingFootprints.s2,
+      entrances: [
+        const BuildingEntrance(
+          id: 's2-principal',
+          name: 'Puerta Principal (Pasillo Derecho - Economicas)',
+          location: LatLng(14.587044, -90.550059),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        const BuildingEntrance(
+          id: 's2-norte',
+          name: 'Puerta Norte (Plaza de los Martires)',
+          location: LatLng(14.587350, -90.550100),
+          type: EntranceType.plaza,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-3',
       name: 'Edificio S-3 (Ciencias Economicas)',
       acronym: 'S-3',
@@ -221,8 +481,24 @@ class UsacCampusDataset {
       description: 'Facultad de Ciencias Economicas, Escuelas de Auditoria, Economia y Administracion.',
       category: BuildingCategory.faculty,
       floors: 4,
+      entrances: [
+        BuildingEntrance(
+          id: 's3-principal',
+          name: 'Puerta Principal (Pasillo Economicas - Derecho)',
+          location: LatLng(14.587055, -90.549218),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+        BuildingEntrance(
+          id: 's3-oriente',
+          name: 'Puerta Oriente (hacia Estadio Revolucion)',
+          location: LatLng(14.587050, -90.548400),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-4',
       name: 'Edificio S-4 (Ciencias de la Comunicacion)',
       acronym: 'S-4',
@@ -230,8 +506,17 @@ class UsacCampusDataset {
       description: 'Escuela de Ciencias de la Comunicacion (ECC), cabinas de grabacion, radio y set de TV.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 's4-principal',
+          name: 'Puerta Principal Ciencias de la Comunicacion',
+          location: LatLng(14.586825, -90.550886),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-5',
       name: 'Edificio S-5 (Trabajo Social)',
       acronym: 'S-5',
@@ -239,8 +524,17 @@ class UsacCampusDataset {
       description: 'Escuela de Trabajo Social, aulas de docencia e investigacion social comunitaria.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 's5-principal',
+          name: 'Puerta Principal Trabajo Social',
+          location: LatLng(14.586662, -90.550103),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-8',
       name: 'Edificio S-8 (Posgrados de Economicas y Sociales)',
       acronym: 'S-8',
@@ -248,8 +542,17 @@ class UsacCampusDataset {
       description: 'Escuela de Estudios de Posgrado de la division de ciencias economicas y sociales.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 's8-principal',
+          name: 'Puerta Principal Posgrados',
+          location: LatLng(14.586159, -90.549907),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-9',
       name: 'Edificio S-9 (Escuela de Historia)',
       acronym: 'S-9',
@@ -257,8 +560,17 @@ class UsacCampusDataset {
       description: 'Antropologia, arqueologia, historia y archivo documental de investigaciones historicas.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 's9-principal',
+          name: 'Puerta Principal Escuela de Historia',
+          location: LatLng(14.582847, -90.556057),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-10',
       name: 'Edificio S-10 (Facultad de Humanidades)',
       acronym: 'S-10',
@@ -266,8 +578,17 @@ class UsacCampusDataset {
       description: 'Decanatura de Humanidades, Departamentos de Pedagogia, Letras, Filosofia y Arte.',
       category: BuildingCategory.faculty,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 's10-principal',
+          name: 'Puerta Principal Facultad de Humanidades',
+          location: LatLng(14.582374, -90.556121),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-12',
       name: 'Edificio S-12 (EFPEM)',
       acronym: 'S-12',
@@ -275,8 +596,17 @@ class UsacCampusDataset {
       description: 'Escuela de Formacion de Profesores de Ensenanza Media y profesorados especializados.',
       category: BuildingCategory.faculty,
       floors: 4,
+      entrances: [
+        BuildingEntrance(
+          id: 's12-principal',
+          name: 'Puerta Principal EFPEM',
+          location: LatLng(14.583171, -90.554652),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'anexo-s12',
       name: 'Anexo Edificio S-12 (EFPEM)',
       acronym: 'ANEXO-S12',
@@ -284,8 +614,17 @@ class UsacCampusDataset {
       description: 'Salones de ampliacion academica y laboratorios docentes de la EFPEM.',
       category: BuildingCategory.faculty,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'anexo-s12-principal',
+          name: 'Puerta Principal Anexo EFPEM',
+          location: LatLng(14.583446, -90.554180),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 's-13',
       name: 'Edificio S-13 (CALUSAC / Ciencias Linguisticas)',
       acronym: 'S-13',
@@ -293,17 +632,43 @@ class UsacCampusDataset {
       description: 'Escuela de Ciencias Linguisticas y Centro de Aprendizaje de Lenguas (CALUSAC).',
       category: BuildingCategory.generalAcademic,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 's13-principal',
+          name: 'Puerta Principal CALUSAC',
+          location: LatLng(14.584093, -90.553673),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
     CampusBuilding(
       id: 'rectoria',
       name: 'Edificio de Rectoria',
       acronym: 'RECT',
-      location: LatLng(14.588146, -90.551704),
+      location: const LatLng(14.588146, -90.551704),
       description: 'Sede central del gobierno universitario y Consejo Superior Universitario (CSU).',
       category: BuildingCategory.administrative,
       floors: 4,
+      polygonFootprint: UsacBuildingFootprints.rectoria,
+      entrances: [
+        const BuildingEntrance(
+          id: 'rectoria-principal',
+          name: 'Puerta Principal Sur (Escalinatas Plaza)',
+          location: LatLng(14.588146, -90.551704),
+          type: EntranceType.plaza,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+        const BuildingEntrance(
+          id: 'rectoria-oriente',
+          name: 'Puerta Oriente (hacia Registro)',
+          location: LatLng(14.588100, -90.551100),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'plaza-martires',
       name: 'Plaza de los Martires',
       acronym: 'PLAZA',
@@ -311,17 +676,43 @@ class UsacCampusDataset {
       description: 'Plaza central y civica de la universidad, punto de encuentro de la comunidad usac.',
       category: BuildingCategory.administrative,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'plaza-central',
+          name: 'Distribuidor Peatonal Central Plaza de los Martires',
+          location: LatLng(14.587500, -90.551845),
+          type: EntranceType.plaza,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
     CampusBuilding(
       id: 'biblio-central',
       name: 'Biblioteca Central Cesar Branas',
       acronym: 'BIBLIO',
-      location: LatLng(14.586838, -90.551859),
+      location: const LatLng(14.587018, -90.551946),
       description: 'Acervo bibliografico general, hemeroteca, salas de tesis y repositorio academico.',
       category: BuildingCategory.library,
       floors: 3,
+      polygonFootprint: UsacBuildingFootprints.biblioteca,
+      entrances: [
+        const BuildingEntrance(
+          id: 'biblio-norte',
+          name: 'Puerta Principal Norte (Plaza de los Martires)',
+          location: LatLng(14.587018, -90.551946),
+          type: EntranceType.plaza,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+        const BuildingEntrance(
+          id: 'biblio-sur',
+          name: 'Puerta Sur (hacia Jardines y Agronomia)',
+          location: LatLng(14.586838, -90.551859),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'caja-central',
       name: 'Caja Central y Finanzas',
       acronym: 'CAJA',
@@ -329,8 +720,17 @@ class UsacCampusDataset {
       description: 'Departamento de caja, pagos institucionales y gestion financiera universitaria.',
       category: BuildingCategory.administrative,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'caja-principal',
+          name: 'Puerta Principal Caja Central',
+          location: LatLng(14.586928, -90.551266),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'registro',
       name: 'Registro y Estadistica (RyE)',
       acronym: 'RyE',
@@ -338,8 +738,17 @@ class UsacCampusDataset {
       description: 'Inscripciones, matriculas, certificaciones de cursos, equivalencias y titulos.',
       category: BuildingCategory.administrative,
       floors: 3,
+      entrances: [
+        BuildingEntrance(
+          id: 'registro-principal',
+          name: 'Puerta Principal Registro y Estadistica',
+          location: LatLng(14.588069, -90.550529),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'iglu',
       name: 'Auditorio IGLU',
       acronym: 'IGLU',
@@ -347,8 +756,17 @@ class UsacCampusDataset {
       description: 'Auditorio principal para actos de graduacion, asambleas estudiantiles y congresos.',
       category: BuildingCategory.administrative,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'iglu-principal',
+          name: 'Puerta Principal Auditorio IGLU',
+          location: LatLng(14.586299, -90.553385),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'bcie',
       name: 'Edificio USAC-BCIE',
       acronym: 'BCIE',
@@ -356,8 +774,17 @@ class UsacCampusDataset {
       description: 'Oficinas de cooperacion universitaria y gestion de programas institucionales.',
       category: BuildingCategory.administrative,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'bcie-principal',
+          name: 'Puerta Principal Edificio BCIE',
+          location: LatLng(14.586652, -90.552006),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'editorial',
       name: 'Editorial Universitaria',
       acronym: 'EDITORIAL',
@@ -365,8 +792,17 @@ class UsacCampusDataset {
       description: 'Editorial y produccion de publicaciones academicas y cientificas de la USAC.',
       category: BuildingCategory.generalAcademic,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'editorial-principal',
+          name: 'Puerta Principal Editorial Universitaria',
+          location: LatLng(14.585293, -90.555984),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'aeu',
       name: 'Sede AEU',
       acronym: 'AEU',
@@ -374,8 +810,17 @@ class UsacCampusDataset {
       description: 'Asociacion de Estudiantes Universitarios Oliverio Castaneda de Leon.',
       category: BuildingCategory.administrative,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'aeu-principal',
+          name: 'Puerta Principal Sede AEU',
+          location: LatLng(14.584871, -90.553873),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'casa-cultura-agronomia',
       name: 'Casa de la Cultura de Agronomia',
       acronym: 'CULTURA',
@@ -383,8 +828,17 @@ class UsacCampusDataset {
       description: 'Espacio cultural y de extension comunitaria de la Facultad de Agronomia.',
       category: BuildingCategory.generalAcademic,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'casa-cultura-principal',
+          name: 'Puerta Principal Casa de la Cultura',
+          location: LatLng(14.584998, -90.552880),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'centro-salud',
       name: 'Centro de Salud y Farmacia Universitaria',
       acronym: 'SALUD',
@@ -392,8 +846,17 @@ class UsacCampusDataset {
       description: 'Atencion medica ambulatoria, farmacia social y consultas de medicina preventiva.',
       category: BuildingCategory.health,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'centro-salud-principal',
+          name: 'Puerta Principal Centro de Salud',
+          location: LatLng(14.586956, -90.551927),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'jardin-carlos2',
       name: 'Jardin Infantil y Colegio Rey Carlos II',
       acronym: 'REY-CARLOS',
@@ -401,17 +864,43 @@ class UsacCampusDataset {
       description: 'Centro educativo y guarderia para hijos de trabajadores y estudiantes de la USAC.',
       category: BuildingCategory.generalAcademic,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'jardin-carlos2-principal',
+          name: 'Puerta Principal Jardin Infantil Rey Carlos II',
+          location: LatLng(14.583709, -90.552700),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
     CampusBuilding(
       id: 'estadio-revolucion',
       name: 'Estadio Revolucion',
       acronym: 'ESTADIO',
-      location: LatLng(14.586582, -90.547836),
+      location: const LatLng(14.586582, -90.547836),
       description: 'Cancha de futbol reglamentaria, graderias y pista atletica del campus central.',
       category: BuildingCategory.sports,
       floors: 1,
+      polygonFootprint: UsacBuildingFootprints.estadio,
+      entrances: [
+        const BuildingEntrance(
+          id: 'estadio-norte',
+          name: 'Acceso Puerta Norte Estadio Revolucion',
+          location: LatLng(14.586582, -90.547836),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+        const BuildingEntrance(
+          id: 'estadio-poniente',
+          name: 'Acceso Poniente (Sector S)',
+          location: LatLng(14.587050, -90.548400),
+          type: EntranceType.secondary,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'polideportivo',
       name: 'Polideportivo Central',
       acronym: 'POLI',
@@ -419,8 +908,17 @@ class UsacCampusDataset {
       description: 'Gimnasio techado para basquetbol, voleibol y disciplinas polideportivas.',
       category: BuildingCategory.sports,
       floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'polideportivo-principal',
+          name: 'Puerta Principal Polideportivo',
+          location: LatLng(14.585560, -90.548046),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'tenis-usac',
       name: 'Canchas de Tenis USAC',
       acronym: 'TENIS',
@@ -428,8 +926,17 @@ class UsacCampusDataset {
       description: 'Canchas oficiales de tenis para docencia deportiva y torneos universitarios.',
       category: BuildingCategory.sports,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'tenis-principal',
+          name: 'Acceso Canchas de Tenis',
+          location: LatLng(14.588097, -90.547652),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'cancha-ingenieria',
       name: 'Cancha Polideportiva de Ingenieria',
       acronym: 'CANCHA-ING',
@@ -437,8 +944,17 @@ class UsacCampusDataset {
       description: 'Area deportiva y canchas polifuncionales contiguas a T-3 y T-4.',
       category: BuildingCategory.sports,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'cancha-ing-principal',
+          name: 'Acceso Cancha de Ingenieria',
+          location: LatLng(14.587204, -90.552523),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.corridor,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'parqueo-ingenieria',
       name: 'Estacionamiento Facultad de Ingenieria',
       acronym: 'PRK-ING',
@@ -446,8 +962,17 @@ class UsacCampusDataset {
       description: 'Aparcamiento vehicular y de motocicletas del sector tecnologico (T-3 / T-6).',
       category: BuildingCategory.parking,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'parqueo-ing-peatonal',
+          name: 'Acceso Peatonal Parqueo Ingenieria',
+          location: LatLng(14.587135, -90.553580),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'parqueo-arquitectura',
       name: 'Estacionamiento Facultad de Arquitectura',
       acronym: 'PRK-ARQ',
@@ -455,8 +980,17 @@ class UsacCampusDataset {
       description: 'Area de parqueo contigua a los edificios T-1 y T-2.',
       category: BuildingCategory.parking,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'parqueo-arq-peatonal',
+          name: 'Acceso Peatonal Parqueo Arquitectura',
+          location: LatLng(14.588912, -90.552725),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'parqueo-agronomia',
       name: 'Estacionamiento de Agronomia',
       acronym: 'PRK-AGRO',
@@ -464,8 +998,17 @@ class UsacCampusDataset {
       description: 'Estacionamiento de profesores y estudiantes de ciencias agropecuarias.',
       category: BuildingCategory.parking,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'parqueo-agro-peatonal',
+          name: 'Acceso Peatonal Parqueo Agronomia',
+          location: LatLng(14.584540, -90.552109),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'parqueo-petapa',
       name: 'Estacionamiento Avenida Petapa',
       acronym: 'PRK-PET',
@@ -473,8 +1016,17 @@ class UsacCampusDataset {
       description: 'Parqueo del sector oriente con conexion directa hacia garita Petapa.',
       category: BuildingCategory.parking,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'parqueo-pet-peatonal',
+          name: 'Acceso Peatonal Parqueo Petapa',
+          location: LatLng(14.588200, -90.547800),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'parqueo-periferico',
       name: 'Estacionamiento Anillo Periferico',
       acronym: 'PRK-PER',
@@ -482,17 +1034,35 @@ class UsacCampusDataset {
       description: 'Amplia zona de aparcamiento vehicular del sector poniente.',
       category: BuildingCategory.parking,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'parqueo-per-peatonal',
+          name: 'Acceso Peatonal Parqueo Periferico',
+          location: LatLng(14.584800, -90.555200),
+          type: EntranceType.parking,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'garita-periferico',
       name: 'Garita de Acceso Anillo Periferico',
       acronym: 'GAR-PER',
-      location: LatLng(14.583924, -90.555003),
+      location: LatLng(14.584347, -90.556275),
       description: 'Ingreso y egreso vehicular principal poniente hacia el Anillo Periferico.',
       category: BuildingCategory.access,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'garita-periferico-acceso',
+          name: 'Acceso Peatonal y Vehicular Garita Periferico',
+          location: LatLng(14.584347, -90.556275),
+          type: EntranceType.vehicularPedestrian,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
+    const CampusBuilding(
       id: 'garita-petapa',
       name: 'Garita de Acceso Avenida Petapa',
       acronym: 'GAR-PET',
@@ -500,15 +1070,51 @@ class UsacCampusDataset {
       description: 'Control vehicular y pasarela peatonal sobre la Avenida Petapa (oriente).',
       category: BuildingCategory.access,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'garita-petapa-acceso',
+          name: 'Acceso Peatonal y Vehicular Garita Petapa',
+          location: LatLng(14.588497, -90.547154),
+          type: EntranceType.vehicularPedestrian,
+          connectedWalkwayType: WalkwayType.street,
+        ),
+      ],
     ),
-    CampusBuilding(
-      id: 'garita-san-marcos',
-      name: 'Garita Peatonal San Marcos',
-      acronym: 'GAR-SMR',
-      location: LatLng(14.589839, -90.549338),
-      description: 'Acceso peatonal norte que conecta el campus con colonias aledanas.',
-      category: BuildingCategory.access,
+    const CampusBuilding(
+      id: 'escuela-aplicacion',
+      name: 'Escuela de Aplicacion Dr. Carlos Martinez Duran',
+      acronym: 'ESC-APL',
+      location: LatLng(14.586012, -90.546489),
+      description: 'Centro educativo experimental del campus central de la USAC, anexo a EFPEM.',
+      category: BuildingCategory.generalAcademic,
+      floors: 2,
+      entrances: [
+        BuildingEntrance(
+          id: 'escuela-apl-principal',
+          name: 'Puerta Principal Escuela de Aplicacion',
+          location: LatLng(14.586469, -90.546000),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
+    ),
+    const CampusBuilding(
+      id: 'bosque-ardillas',
+      name: 'Bosque y Sendero Ecologico Las Ardillas',
+      acronym: 'B-ARD',
+      location: LatLng(14.587992, -90.554880),
+      description: 'Area ecologica protegida, sendero natural y mirador de biodiversidad en la ladera poniente del campus.',
+      category: BuildingCategory.sports,
       floors: 1,
+      entrances: [
+        BuildingEntrance(
+          id: 'bosque-ardillas-inicio',
+          name: 'Inicio Sendero Las Ardillas (Sector T-1 / ECFM)',
+          location: LatLng(14.588076, -90.554390),
+          type: EntranceType.main,
+          connectedWalkwayType: WalkwayType.pathway,
+        ),
+      ],
     ),
   ];
 

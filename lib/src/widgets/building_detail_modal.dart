@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../data/usac_campus_boundary.dart';
 import '../data/usac_campus_dataset.dart';
-import '../models/building_category.dart';
 import '../models/campus_building.dart';
 import '../services/distance_service.dart';
 
@@ -39,52 +38,6 @@ class BuildingDetailModal extends StatelessWidget {
     );
   }
 
-  Color _getCategoryColor(BuildingCategory category) {
-    switch (category) {
-      case BuildingCategory.faculty:
-        return const Color(0xFF1E3A8A);
-      case BuildingCategory.administrative:
-        return const Color(0xFF0F766E);
-      case BuildingCategory.library:
-        return const Color(0xFFB45309);
-      case BuildingCategory.sports:
-        return const Color(0xFF15803D);
-      case BuildingCategory.food:
-        return const Color(0xFFC2410C);
-      case BuildingCategory.parking:
-        return const Color(0xFF475569);
-      case BuildingCategory.access:
-        return const Color(0xFF78350F);
-      case BuildingCategory.health:
-        return const Color(0xFFDC2626);
-      case BuildingCategory.generalAcademic:
-        return const Color(0xFF6D28D9);
-    }
-  }
-
-  IconData _getCategoryIcon(BuildingCategory category) {
-    switch (category) {
-      case BuildingCategory.faculty:
-        return Icons.school;
-      case BuildingCategory.administrative:
-        return Icons.account_balance;
-      case BuildingCategory.library:
-        return Icons.menu_book;
-      case BuildingCategory.sports:
-        return Icons.sports_soccer;
-      case BuildingCategory.food:
-        return Icons.restaurant;
-      case BuildingCategory.parking:
-        return Icons.local_parking;
-      case BuildingCategory.access:
-        return Icons.sensor_door;
-      case BuildingCategory.health:
-        return Icons.local_hospital;
-      case BuildingCategory.generalAcademic:
-        return Icons.auto_stories;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final distanceService = CampusDistanceService();
@@ -96,8 +49,8 @@ class BuildingDetailModal extends StatelessWidget {
     final walkingDuration =
         distanceService.estimateCampusWalkingDuration(distanceMeters);
     final walkingText = distanceService.formatWalkingTime(walkingDuration);
-    final categoryColor = _getCategoryColor(building.category);
-    final categoryIcon = _getCategoryIcon(building.category);
+    final categoryColor = building.category.color;
+    final categoryIcon = building.category.icon;
 
     return Container(
       decoration: const BoxDecoration(
@@ -234,18 +187,63 @@ class BuildingDetailModal extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
-            Row(
-              children: [
-                Icon(Icons.pin_drop_outlined,
-                    size: 18, color: Colors.grey.shade700),
-                const SizedBox(width: 8),
-                Text(
-                  'Coordenadas: ${building.location.latitude.toStringAsFixed(5)}, ${building.location.longitude.toStringAsFixed(5)}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+            if (building.entrances.isNotEmpty) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.door_front_door_outlined,
+                      size: 18, color: Colors.grey.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          building.entrances.length == 1
+                              ? 'Acceso: ${building.entrances.first.name}'
+                              : 'Accesos disponibles:',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade800,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (building.entrances.length > 1)
+                          ...building.entrances.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    e.isAccessible
+                                        ? Icons.accessible
+                                        : Icons.chevron_right,
+                                    size: 14,
+                                    color: e.isAccessible
+                                        ? const Color(0xFF0F766E)
+                                        : Colors.grey.shade500,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      e.name,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
                 const Icon(
@@ -279,23 +277,9 @@ class BuildingDetailModal extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (referencePosition != null &&
-                        !UsacCampusBoundary.isInsideCampus(
-                            referencePosition!)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Debes estar dentro del Campus Central para trazar una ruta a pie.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    onNavigate?.call();
-                  },
-                  icon: const Icon(Icons.navigation, size: 18),
-                  label: const Text('Cómo llegar / Trazar Ruta'),
+                  onPressed: onNavigate,
+                  icon: const Icon(Icons.route_outlined, size: 18),
+                  label: const Text('Cómo llegar'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF002B49),
                     foregroundColor: Colors.white,

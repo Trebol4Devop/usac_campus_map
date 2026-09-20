@@ -99,6 +99,49 @@ void main() {
       expect(route.points.first, equals(originBuilding.location));
       expect(route.points.last, equals(destBuilding.location));
       expect(route.distanceInMeters, greaterThan(50.0));
+      // Verifies precise walkway path tracing rather than a crude straight line
+      expect(route.points.length, greaterThanOrEqualTo(5));
+    });
+
+    test('all campus buildings can navigate to Biblioteca Central along walkways', () {
+      final destBuilding = UsacCampusDataset.getById('biblio-central')!;
+
+      for (final building in UsacCampusDataset.allBuildings) {
+        if (building.id == 'biblio-central') continue;
+
+        final route = routeService.calculateRouteBetweenBuildings(
+          origin: building,
+          destination: destBuilding,
+        );
+
+        expect(route, isNotNull, reason: 'Failed route from ${building.id}');
+        expect(route!.points.isNotEmpty, isTrue);
+        expect(route.distanceInMeters, greaterThan(0.0));
+
+        // Every point along the route must be strictly inside the campus boundary
+        for (final pt in route.points) {
+          expect(
+            UsacCampusBoundary.isInsideCampus(pt),
+            isTrue,
+            reason: 'Point $pt in route from ${building.id} is outside campus',
+          );
+        }
+      }
+    });
+
+    test('generates detailed pedestrian walkway vertices avoiding straight jumps', () {
+      final originBuilding = UsacCampusDataset.getById('garita-periferico')!;
+      final destBuilding = UsacCampusDataset.getById('m-1')!;
+
+      final route = routeService.calculateRouteBetweenBuildings(
+        origin: originBuilding,
+        destination: destBuilding,
+      );
+
+      expect(route, isNotNull);
+      // High precision path contains dozens of real walkway vertices
+      expect(route!.points.length, greaterThanOrEqualTo(20));
+      expect(route.distanceInMeters, greaterThan(700.0));
     });
   });
 }

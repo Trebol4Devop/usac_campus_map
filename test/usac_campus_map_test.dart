@@ -81,13 +81,43 @@ void main() {
       expect(map.campusCutoutColor, equals(Colors.black));
     });
 
-    test('UsacCampusBoundary generates valid cutout mask with campus perimeter hole', () {
+    test('UsacCampusBoundary generates valid cutout mask with campus perimeter hole without harsh border', () {
       final mask = UsacCampusBoundary.createCampusCutoutMask();
       expect(mask.holePointsList, isNotNull);
       expect(mask.holePointsList!.length, equals(1));
       expect(mask.holePointsList!.first.length, equals(UsacCampusBoundary.campusPerimeter.length));
-      expect(mask.disableHolesBorder, isFalse);
-      expect(mask.borderColor, equals(const Color(0xFF002B49)));
+      expect(mask.disableHolesBorder, isTrue);
+      expect(mask.borderColor, equals(Colors.transparent));
+      expect(mask.borderStrokeWidth, equals(0.0));
+
+      final shadowPolylines =
+          UsacCampusBoundary.createCampusPerimeterShadowPolylines();
+      expect(shadowPolylines.length, equals(5));
+      expect(shadowPolylines.first.points.length,
+          equals(UsacCampusBoundary.campusPerimeter.length + 1));
+    });
+
+    test('UsacCampusBoundary accurately encloses all campus buildings and excludes external avenues', () {
+      for (final b in UsacCampusDataset.allBuildings) {
+        expect(
+          UsacCampusBoundary.isInsideCampus(b.location),
+          isTrue,
+          reason: 'Building ${b.id} (${b.name}) at ${b.location} must be inside campus',
+        );
+        for (final ent in b.entrances) {
+          expect(
+            UsacCampusBoundary.isInsideCampus(ent.location),
+            isTrue,
+            reason: 'Entrance ${ent.id} of ${b.id} must be inside campus',
+          );
+        }
+      }
+
+      // External points like Avenida Petapa or outside Periférico should be outside
+      const outsidePetapa = LatLng(14.587883, -90.544500);
+      const outsidePeriferico = LatLng(14.585000, -90.560000);
+      expect(UsacCampusBoundary.isInsideCampus(outsidePetapa), isFalse);
+      expect(UsacCampusBoundary.isInsideCampus(outsidePeriferico), isFalse);
     });
 
     testWidgets('renders floating interactive action buttons by default', (tester) async {

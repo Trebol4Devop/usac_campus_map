@@ -34,7 +34,6 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
   final UsacCampusMapController _mapController = UsacCampusMapController();
   BuildingCategory? _selectedCategory;
   String _searchQuery = '';
-  bool _showBoundary = true;
   LatLng? _currentUserPosition;
   CampusBuilding? _navigatingDestination;
 
@@ -80,8 +79,9 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
                 top: 24,
                 bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
@@ -110,7 +110,7 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
                       prefixIcon: Icon(Icons.trip_origin, color: Colors.green),
                       border: OutlineInputBorder(),
                     ),
-                    value: selectedOrigin,
+                    initialValue: selectedOrigin,
                     isExpanded: true,
                     items: allBuildings
                         .map(
@@ -136,7 +136,7 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
                       prefixIcon: Icon(Icons.location_on, color: Colors.red),
                       border: OutlineInputBorder(),
                     ),
-                    value: selectedDestination,
+                    initialValue: selectedDestination,
                     isExpanded: true,
                     items: allBuildings
                         .map(
@@ -180,7 +180,8 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
                   ),
                 ],
               ),
-            );
+            ),
+          );
           },
         );
       },
@@ -210,18 +211,6 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
             icon: const Icon(Icons.alt_route, color: Colors.white),
             onPressed: _showRoutePlannerSheet,
           ),
-          IconButton(
-            tooltip: _showBoundary ? 'Ocultar perimetro' : 'Mostrar perimetro',
-            icon: Icon(
-              _showBoundary ? Icons.layers : Icons.layers_outlined,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              setState(() {
-                _showBoundary = !_showBoundary;
-              });
-            },
-          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
@@ -240,7 +229,6 @@ class _CampusMapDemoPageState extends State<CampusMapDemoPage> {
           UsacCampusMap(
             controller: _mapController,
             buildings: buildings,
-            showCampusBoundary: _showBoundary,
             routeDestination: _navigatingDestination,
             onClearRoute: () {
               setState(() {
