@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' hide DistanceCalculator;
 import '../../controllers/usac_campus_map_controller.dart';
 import '../../core/utils/distance_calculator.dart';
@@ -52,6 +55,7 @@ class UsacCampusMap extends StatefulWidget {
 class _UsacCampusMapState extends State<UsacCampusMap> {
   late UsacCampusMapController _controller;
   bool _internalController = false;
+  StreamSubscription<Position>? _positionSubscription;
 
   @override
   void initState() {
@@ -64,6 +68,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
       _controller.loadData();
     }
     _controller.addListener(_onControllerChange);
+    _startLocationTracking();
 
     if (widget.routeDestination != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -90,6 +95,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
 
   @override
   void dispose() {
+    _positionSubscription?.cancel();
     _controller.removeListener(_onControllerChange);
     if (_internalController) {
       _controller.dispose();
@@ -155,6 +161,51 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
         }
       },
     );
+  }
+
+  Future<void> _startLocationTracking() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    await _updateCurrentPosition();
+    _positionSubscription?.cancel();
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      ),
+    ).listen(_onPositionReceived);
+  }
+
+  Future<void> _updateCurrentPosition() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      _onPositionReceived(position);
+    } catch (_) {}
+  }
+
+  void _onPositionReceived(Position position) {
+    final userLoc = LatLng(position.latitude, position.longitude);
+    _controller.updateUserLocation(userLoc);
+    widget.onUserLocationChanged?.call(userLoc);
+  }
+
+  Future<void> _handleLocationTap() async {
+    if (_controller.userLocation == null) {
+      await _updateCurrentPosition();
+    }
+    _controller.centerOnUser();
   }
 
   @override
@@ -270,16 +321,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                   heroTag: 'fab_usac_location',
                   backgroundColor: Colors.white,
                   foregroundColor: widget.theme.primaryColor,
-                  onPressed: () {
-                    if (_controller.userLocation != null) {
-                      _controller.centerOnUser();
-                    } else {
-                      const mockUserLoc = LatLng(14.587500, -90.551845);
-                      _controller.updateUserLocation(mockUserLoc);
-                      widget.onUserLocationChanged?.call(mockUserLoc);
-                      _controller.centerOnUser();
-                    }
-                  },
+                  onPressed: _handleLocationTap,
                   tooltip: 'Mi ubicación',
                   child: const Icon(Icons.my_location),
                 ),
