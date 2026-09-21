@@ -1,3 +1,25 @@
+## 0.4.0
+
+- Fase 9: Implementacion de motor de proyeccion visual para Realidad Aumentada (ArProjectionEngine) con evaluacion de campo de vision (FOV), rumbo y elevacion.
+- Modelado geometrico tridimensional volumetrico de edificios del campus (Building3DModel, Polygon3D, Vector3D).
+- Componentes de interfaz de usuario para realidad aumentada (ArWayfindingView) y visor 3D interactivo con rotacion gestual (Building3DViewer).
+- Suite de pruebas unitarias y de widgets para componentes 3D y de realidad aumentada.
+
+## 0.3.0
+
+- Fase 8: Motor de navegacion giro a giro en tiempo real (RealtimeNavigationEngine) con seguimiento continuo de GPS y proyeccion dinamica a la ruta.
+- Deteccion automatica de desviacion de ruta ante alejamiento superior a 15 metros y recalculacion automatica hacia el destino.
+- Sistema de notificaciones por voz e instrucciones habladas en espanol (NavigationVoiceNotifier).
+- Estado inmutable de telemetria de navegacion (NavigationTrackingState) y adaptacion reactiva de TurnByTurnBanner.
+- Orientacion visual del usuario con flecha de rumbo segun magnetometro/brujula.
+
+## 0.2.0
+
+- Fase 7: Modulo de calculo matematico de coordenadas y rangos de teselas slippy map (TileIndex).
+- Empaquetado y metadatos de teselas offline para el campus central de la USAC (OfflineTilePackage).
+- Proveedor de teselas fuera de linea para flutter_map (CampusOfflineTileProvider) con garantias de cero peticiones de red.
+- Extension de UsacMapTheme para soporte de modo puramente offline.
+
 ## 0.1.0
 
 - Migracion integral a arquitectura de motores offline de cero costo operativo (Cero USD).
