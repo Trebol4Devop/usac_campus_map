@@ -203,7 +203,10 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
 
   void _onPositionReceived(Position position) {
     final userLoc = LatLng(position.latitude, position.longitude);
-    _controller.updateUserLocation(userLoc);
+    final heading = position.heading.isFinite && position.heading >= 0.0
+        ? position.heading
+        : null;
+    _controller.updateUserLocation(userLoc, heading: heading);
     widget.onUserLocationChanged?.call(userLoc);
   }
 

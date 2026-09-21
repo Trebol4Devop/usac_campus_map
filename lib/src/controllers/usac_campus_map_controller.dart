@@ -97,6 +97,11 @@ class UsacCampusMapController extends ChangeNotifier {
       mode: effectiveMode,
     );
     _currentRoute = route;
+    if (route != null) {
+      startRealtimeNavigation(route);
+    } else {
+      stopRealtimeNavigation();
+    }
     notifyListeners();
     return route;
   }
@@ -119,6 +124,11 @@ class UsacCampusMapController extends ChangeNotifier {
     );
     _currentRoute = route;
     _selectedBuilding = destination;
+    if (route != null) {
+      startRealtimeNavigation(route);
+    } else {
+      stopRealtimeNavigation();
+    }
     notifyListeners();
     return route;
   }
