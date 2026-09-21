@@ -2,12 +2,14 @@ import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../engine/campus_data_repository.dart';
+import '../engine/realtime_navigation_engine.dart';
 import '../engine/route_engine.dart';
 import '../engine/search_engine.dart';
 import '../models/campus_building.dart';
 import '../models/campus_poi.dart';
 import '../models/campus_route.dart';
 import '../models/navigation_mode.dart';
+import '../models/navigation_tracking_state.dart';
 
 class UsacCampusMapController extends ChangeNotifier {
   final CampusDataRepository repository;
@@ -15,6 +17,7 @@ class UsacCampusMapController extends ChangeNotifier {
 
   late RouteEngine _routeEngine;
   late SearchEngine _searchEngine;
+  RealtimeNavigationEngine? _navigationEngine;
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -26,13 +29,17 @@ class UsacCampusMapController extends ChangeNotifier {
   CampusPoi? _selectedPoi;
   int _selectedFloor = 1;
   LatLng? _userLocation;
+  double? _userHeading;
   String _searchQuery = '';
   List<SearchResult> _searchResults = const [];
   NavigationMode _navigationMode = NavigationMode.pedestrian;
+  NavigationTrackingState? _navigationTrackingState;
+  void Function(String prompt)? onVoicePrompt;
 
   UsacCampusMapController({
     CampusDataRepository? repository,
     MapController? mapController,
+    this.onVoicePrompt,
   })  : repository = repository ?? CampusDataRepository(),
         mapController = mapController ?? MapController() {
     _routeEngine = RouteEngine(repository: this.repository);
@@ -46,11 +53,16 @@ class UsacCampusMapController extends ChangeNotifier {
   CampusPoi? get selectedPoi => _selectedPoi;
   int get selectedFloor => _selectedFloor;
   LatLng? get userLocation => _userLocation;
+  double? get userHeading => _userHeading;
   String get searchQuery => _searchQuery;
   List<SearchResult> get searchResults => _searchResults;
   NavigationMode get navigationMode => _navigationMode;
   RouteEngine get routeEngine => _routeEngine;
   SearchEngine get searchEngine => _searchEngine;
+  RealtimeNavigationEngine? get navigationEngine => _navigationEngine;
+  NavigationTrackingState? get navigationTrackingState =>
+      _navigationTrackingState;
+  bool get isNavigating => _navigationEngine?.isNavigating ?? false;
   List<CampusBuilding> get buildings => repository.buildings;
   List<LatLng> get boundary => repository.boundary;
 
@@ -111,6 +123,73 @@ class UsacCampusMapController extends ChangeNotifier {
     return route;
   }
 
+  void startRealtimeNavigation(
+    CampusRoute route, {
+    bool autoReroute = true,
+    void Function(String prompt)? onVoicePromptCallback,
+  }) {
+    _currentRoute = route;
+    _navigationEngine = RealtimeNavigationEngine(
+      onVoicePrompt: onVoicePromptCallback ?? onVoicePrompt,
+      onStateUpdated: (state) {
+        _navigationTrackingState = state;
+        notifyListeners();
+      },
+      onDeviationDetected: (oldRoute, currentLocation) {
+        if (autoReroute && _currentDestinationId != null) {
+          final newRoute = _routeEngine.findRoute(
+            origin: currentLocation,
+            destinationId: _currentDestinationId!,
+            mode: _navigationMode,
+          );
+          if (newRoute != null) {
+            _currentRoute = newRoute;
+            _navigationEngine?.updateRoute(newRoute);
+            notifyListeners();
+          }
+        }
+      },
+      onDestinationReached: () {
+        notifyListeners();
+      },
+    );
+
+    _navigationEngine!.startNavigation(route);
+    if (_userLocation != null) {
+      _navigationEngine!.updatePosition(
+        _userLocation!,
+        heading: _userHeading,
+      );
+    }
+    notifyListeners();
+  }
+
+  void stopRealtimeNavigation() {
+    _navigationEngine?.stopNavigation();
+    _navigationEngine = null;
+    _navigationTrackingState = null;
+    notifyListeners();
+  }
+
+  void updateRealtimeUserPosition(
+    LatLng location, {
+    double? heading,
+    double? speed,
+  }) {
+    _userLocation = location;
+    if (heading != null) {
+      _userHeading = heading;
+    }
+    if (_navigationEngine != null && _navigationEngine!.isNavigating) {
+      _navigationEngine!.updatePosition(
+        location,
+        heading: heading ?? _userHeading,
+        speed: speed,
+      );
+    }
+    notifyListeners();
+  }
+
   List<SearchResult> search(String query, {String? category}) {
     _searchQuery = query;
     _searchResults = _searchEngine.search(query, category: category);
@@ -158,6 +237,7 @@ class UsacCampusMapController extends ChangeNotifier {
   }
 
   void clearRoute() {
+    stopRealtimeNavigation();
     _currentRoute = null;
     _currentOriginBuilding = null;
     _currentOriginLocation = null;
@@ -165,9 +245,8 @@ class UsacCampusMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateUserLocation(LatLng location) {
-    _userLocation = location;
-    notifyListeners();
+  void updateUserLocation(LatLng location, {double? heading}) {
+    updateRealtimeUserPosition(location, heading: heading);
   }
 
   void setNavigationMode(NavigationMode mode) {

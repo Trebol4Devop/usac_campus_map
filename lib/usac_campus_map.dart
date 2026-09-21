@@ -10,6 +10,8 @@ export 'src/core/offline/tile_coordinates.dart';
 export 'src/core/utils/distance_calculator.dart';
 
 export 'src/engine/campus_data_repository.dart';
+export 'src/engine/navigation_voice_notifier.dart';
+export 'src/engine/realtime_navigation_engine.dart';
 export 'src/engine/route_engine.dart';
 export 'src/engine/search_engine.dart';
 
@@ -20,6 +22,7 @@ export 'src/models/campus_poi.dart';
 export 'src/models/campus_route.dart';
 export 'src/models/indoor_floor.dart';
 export 'src/models/navigation_mode.dart';
+export 'src/models/navigation_tracking_state.dart';
 
 export 'src/presentation/offline/campus_offline_tile_provider.dart';
 export 'src/presentation/themes/usac_map_theme.dart';
