@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:latlong2/latlong.dart';
+import '../../models/building_3d_model.dart';
 import '../../models/campus_building.dart';
 import '../../models/campus_poi.dart';
 import '../../models/navigation_mode.dart';
 import '../themes/usac_map_theme.dart';
+import 'building_3d_viewer.dart';
 
 class PoiDetailSheet extends StatelessWidget {
   final CampusBuilding? building;
@@ -255,6 +257,29 @@ class PoiDetailSheet extends StatelessWidget {
                   onNavigate?.call(NavigationMode.accessible);
                 },
               ),
+              if (building != null)
+                IconButton.filledTonal(
+                  tooltip: 'Modelo 3D',
+                  icon: const Icon(Icons.view_in_ar),
+                  onPressed: () {
+                    showDialog<void>(
+                      context: context,
+                      builder: (ctx) => Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: SizedBox(
+                          width: 360.0,
+                          height: 420.0,
+                          child: Building3DViewer(
+                            model: Building3DModel.fromBuilding(building!),
+                            theme: theme,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         ],

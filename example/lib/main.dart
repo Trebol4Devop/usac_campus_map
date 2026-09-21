@@ -257,6 +257,101 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
     );
   }
 
+  void _showBuilding3DDialog() {
+    final buildings = _mapController.buildings;
+    if (buildings.isEmpty) return;
+
+    CampusBuilding current = _mapController.selectedBuilding ??
+        buildings.firstWhere(
+          (b) => b.id == 't-3',
+          orElse: () => buildings.first,
+        );
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final model = Building3DModel.fromBuilding(current);
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: SizedBox(
+                width: 380.0,
+                height: 500.0,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.view_in_ar,
+                              color: Color(0xFF002B49)),
+                          const SizedBox(width: 8.0),
+                          const Expanded(
+                            child: Text(
+                              'Visor Volumétrico 3D',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.0,
+                                color: Color(0xFF002B49),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: current.id,
+                        items: buildings.take(30).map((b) {
+                          final codeStr =
+                              b.code.isNotEmpty ? '[${b.code}] ' : '';
+                          return DropdownMenuItem(
+                            value: b.id,
+                            child: Text(
+                              '$codeStr${b.name}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newId) {
+                          if (newId != null) {
+                            setDialogState(() {
+                              current =
+                                  buildings.firstWhere((b) => b.id == newId);
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Building3DViewer(
+                          model: model,
+                          theme: const UsacMapTheme(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchResults = _mapController.searchResults;
@@ -296,6 +391,11 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
                 }
               });
             },
+          ),
+          IconButton(
+            tooltip: 'Modo 3D (Visor de Edificios)',
+            icon: const Icon(Icons.view_in_ar, color: Colors.white),
+            onPressed: _showBuilding3DDialog,
           ),
           IconButton(
             tooltip: 'Trazar ruta entre edificios',
