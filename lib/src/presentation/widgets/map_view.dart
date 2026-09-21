@@ -193,7 +193,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
   Future<void> _updateCurrentPosition() async {
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        desiredAccuracy: LocationAccuracy.high,
       );
       _onPositionReceived(position);
     } catch (_) {}
