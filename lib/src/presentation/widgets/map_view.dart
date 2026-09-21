@@ -147,10 +147,14 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
       currentFloor: _controller.selectedFloor,
       userLocation: _controller.userLocation,
       theme: widget.theme,
-      onNavigate: (mode) {
+      onNavigate: (mode) async {
         Navigator.of(context).pop();
-        final userLoc = _controller.userLocation ??
-            const LatLng(14.587500, -90.551845);
+        var userLoc = _controller.userLocation;
+        if (userLoc == null) {
+          await _updateCurrentPosition();
+          userLoc = _controller.userLocation;
+        }
+        if (userLoc == null) return;
         final route = _controller.findRoute(
           origin: userLoc,
           destinationId: building.id,
