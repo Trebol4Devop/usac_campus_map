@@ -31,6 +31,7 @@ export 'src/presentation/offline/campus_offline_tile_provider.dart';
 export 'src/presentation/themes/usac_map_theme.dart';
 export 'src/presentation/widgets/ar_wayfinding_view.dart';
 export 'src/presentation/widgets/building_3d_viewer.dart';
+export 'src/presentation/widgets/campus_walk_3d_view.dart';
 export 'src/presentation/widgets/floor_selector.dart';
 export 'src/presentation/widgets/map_view.dart';
 export 'src/presentation/widgets/poi_detail_sheet.dart';

@@ -363,6 +363,28 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
     );
   }
 
+  void _startWalking3DMode() {
+    final buildings = _mapController.buildings;
+    if (buildings.isEmpty) return;
+
+    if (_mapController.currentRoute == null) {
+      final origin = buildings.firstWhere(
+        (b) => b.id == 't-3',
+        orElse: () => buildings.first,
+      );
+      final dest = buildings.firstWhere(
+        (b) => b.id == 'biblio-central',
+        orElse: () => buildings.length > 1 ? buildings[1] : buildings.first,
+      );
+      _mapController.startRouteBetweenBuildings(
+        origin: origin,
+        destination: dest,
+        mode: _activeMode,
+      );
+    }
+    _mapController.open3DWalkingView();
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchResults = _mapController.searchResults;
@@ -404,7 +426,12 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
             },
           ),
           IconButton(
-            tooltip: 'Modo 3D (Visor de Edificios)',
+            tooltip: 'Vista 3D Caminar entre Edificios',
+            icon: const Icon(Icons.streetview, color: Colors.white),
+            onPressed: _startWalking3DMode,
+          ),
+          IconButton(
+            tooltip: 'Visor Volumétrico 3D',
             icon: const Icon(Icons.view_in_ar, color: Colors.white),
             onPressed: _showBuilding3DDialog,
           ),
