@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:flutter_map/flutter_map.dart';
@@ -12,6 +13,7 @@ import '../../models/campus_route.dart';
 import '../../core/offline/offline_tile_package.dart';
 import '../offline/campus_offline_tile_provider.dart';
 import '../themes/usac_map_theme.dart';
+import 'campus_walk_3d_view.dart';
 import 'floor_selector.dart';
 import 'poi_detail_sheet.dart';
 import 'turn_by_turn_banner.dart';
@@ -262,18 +264,11 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                 ],
               ),
             PolygonLayer(
-              polygons: effectiveBuildings.map((b) {
-                final isSelected = selectedBuilding?.id == b.id;
-                final colors = _getPolygonColors(b, isSelected);
-                return Polygon(
-                  points: b.polygon.isNotEmpty
-                      ? b.polygon
-                      : _generateSquare(b.center, 25.0),
-                  color: colors.$1,
-                  borderColor: colors.$2,
-                  borderStrokeWidth: isSelected ? 3.0 : 1.5,
-                );
-              }).toList(),
+              polygons: _buildBuildingPolygons(
+                effectiveBuildings,
+                selectedBuilding,
+                _controller.is3DMode,
+              ),
             ),
             if (currentRoute != null)
               PolylineLayer(
@@ -293,6 +288,9 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
               route: currentRoute,
               theme: widget.theme,
               trackingState: _controller.navigationTrackingState,
+              onToggle3DWalk: () {
+                _controller.open3DWalkingView();
+              },
               onClose: () {
                 _controller.clearRoute();
                 widget.onClearRoute?.call();
@@ -319,6 +317,43 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (currentRoute != null) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'fab_usac_walk_3d',
+                    backgroundColor: widget.theme.accentColor,
+                    foregroundColor: Colors.black,
+                    onPressed: () {
+                      _controller.open3DWalkingView();
+                    },
+                    icon: const Icon(Icons.view_in_ar),
+                    label: const Text(
+                      'Caminar 3D',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                ],
+                FloatingActionButton.small(
+                  heroTag: 'fab_usac_3d',
+                  backgroundColor: _controller.is3DMode
+                      ? widget.theme.primaryColor
+                      : Colors.white,
+                  foregroundColor: _controller.is3DMode
+                      ? Colors.white
+                      : widget.theme.primaryColor,
+                  onPressed: () {
+                    _controller.toggle3DMode();
+                  },
+                  tooltip: _controller.is3DMode ? 'Modo 2D' : 'Modo 3D',
+                  child: const Text(
+                    '3D',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8.0),
                 FloatingActionButton.small(
                   heroTag: 'fab_usac_center',
                   backgroundColor: Colors.white,
@@ -342,6 +377,23 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                   child: const Icon(Icons.my_location),
                 ),
               ],
+            ),
+          ),
+        if (_controller.is3DWalkingViewOpen && currentRoute != null)
+          Positioned.fill(
+            child: CampusWalk3DView(
+              route: currentRoute,
+              buildings: effectiveBuildings,
+              initialLocation: _controller.userLocation,
+              initialHeading: _controller.userHeading,
+              theme: widget.theme,
+              trackingState: _controller.navigationTrackingState,
+              onClose: () {
+                _controller.close3DWalkingView();
+              },
+              onLocationChanged: (loc) {
+                _controller.updateUserLocation(loc);
+              },
             ),
           ),
       ],
@@ -567,5 +619,92 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
           widget.theme.buildingBorderColor,
         );
     }
+  }
+
+  List<Polygon> _buildBuildingPolygons(
+    List<CampusBuilding> buildings,
+    CampusBuilding? selectedBuilding,
+    bool is3D,
+  ) {
+    final polygons = <Polygon>[];
+
+    for (final b in buildings) {
+      final isSelected = selectedBuilding?.id == b.id;
+      final colors = _getPolygonColors(b, isSelected);
+      final basePoints = b.polygon.isNotEmpty
+          ? b.polygon
+          : _generateSquare(b.center, 25.0);
+
+      if (!is3D) {
+        polygons.add(
+          Polygon(
+            points: basePoints,
+            color: colors.$1,
+            borderColor: colors.$2,
+            borderStrokeWidth: isSelected ? 3.0 : 1.5,
+          ),
+        );
+        continue;
+      }
+
+      final floors = max(1, b.floorsCount);
+      final heightMeters = floors * 4.0;
+      final dLat = heightMeters * 0.000028;
+      final dLng = heightMeters * 0.000028;
+
+      final roofPoints = basePoints
+          .map((p) => LatLng(p.latitude + dLat, p.longitude + dLng))
+          .toList();
+
+      polygons.add(
+        Polygon(
+          points: basePoints,
+          color: Colors.black.withValues(alpha: 0.25),
+          borderColor: Colors.transparent,
+        ),
+      );
+
+      for (int i = 0; i < basePoints.length; i++) {
+        final next = (i + 1) % basePoints.length;
+        final p1 = basePoints[i];
+        final p2 = basePoints[next];
+        final r1 = roofPoints[i];
+        final r2 = roofPoints[next];
+
+        final angle =
+            atan2(p2.latitude - p1.latitude, p2.longitude - p1.longitude);
+        final shade = ((sin(angle) + 1.0) / 2.0).clamp(0.25, 0.95);
+        final wallColor = Color.lerp(
+          colors.$1,
+          Colors.black,
+          0.2 + 0.45 * (1.0 - shade),
+        )!
+            .withValues(alpha: 0.88);
+
+        polygons.add(
+          Polygon(
+            points: [p1, p2, r2, r1],
+            color: wallColor,
+            borderColor: colors.$2.withValues(alpha: 0.6),
+            borderStrokeWidth: 1.0,
+          ),
+        );
+      }
+
+      final roofColor = isSelected
+          ? widget.theme.accentColor
+          : Color.lerp(colors.$1, Colors.white, 0.22)!.withValues(alpha: 0.95);
+
+      polygons.add(
+        Polygon(
+          points: roofPoints,
+          color: roofColor,
+          borderColor: isSelected ? Colors.white : colors.$2,
+          borderStrokeWidth: isSelected ? 2.5 : 1.5,
+        ),
+      );
+    }
+
+    return polygons;
   }
 }

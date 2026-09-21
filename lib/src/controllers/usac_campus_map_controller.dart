@@ -35,6 +35,9 @@ class UsacCampusMapController extends ChangeNotifier {
   NavigationMode _navigationMode = NavigationMode.pedestrian;
   NavigationTrackingState? _navigationTrackingState;
   void Function(String prompt)? onVoicePrompt;
+  bool _is3DMode = false;
+  bool _is3DWalkingViewOpen = false;
+  bool _followUserHeading = false;
 
   UsacCampusMapController({
     CampusDataRepository? repository,
@@ -65,6 +68,48 @@ class UsacCampusMapController extends ChangeNotifier {
   bool get isNavigating => _navigationEngine?.isNavigating ?? false;
   List<CampusBuilding> get buildings => repository.buildings;
   List<LatLng> get boundary => repository.boundary;
+  bool get is3DMode => _is3DMode;
+  bool get is3DWalkingViewOpen => _is3DWalkingViewOpen;
+  bool get followUserHeading => _followUserHeading;
+
+  void toggle3DMode() {
+    _is3DMode = !_is3DMode;
+    notifyListeners();
+  }
+
+  void set3DMode(bool enabled) {
+    if (_is3DMode != enabled) {
+      _is3DMode = enabled;
+      notifyListeners();
+    }
+  }
+
+  void toggle3DWalkingView() {
+    _is3DWalkingViewOpen = !_is3DWalkingViewOpen;
+    notifyListeners();
+  }
+
+  void set3DWalkingViewOpen(bool open) {
+    if (_is3DWalkingViewOpen != open) {
+      _is3DWalkingViewOpen = open;
+      notifyListeners();
+    }
+  }
+
+  void open3DWalkingView() {
+    set3DWalkingViewOpen(true);
+  }
+
+  void close3DWalkingView() {
+    set3DWalkingViewOpen(false);
+  }
+
+  void setFollowUserHeading(bool follow) {
+    if (_followUserHeading != follow) {
+      _followUserHeading = follow;
+      notifyListeners();
+    }
+  }
 
   Future<void> loadData({AssetBundle? bundle}) async {
     _isLoading = true;
@@ -196,6 +241,12 @@ class UsacCampusMapController extends ChangeNotifier {
         heading: heading ?? _userHeading,
         speed: speed,
       );
+    }
+    if (_followUserHeading && _userHeading != null) {
+      try {
+        mapController.rotate(-_userHeading!);
+        mapController.move(location, mapController.camera.zoom);
+      } catch (_) {}
     }
     notifyListeners();
   }
