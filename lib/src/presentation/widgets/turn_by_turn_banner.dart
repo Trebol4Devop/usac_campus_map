@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart' hide NavigationMode;
 import '../../models/campus_route.dart';
 import '../../models/navigation_mode.dart';
+import '../../models/navigation_tracking_state.dart';
 import '../themes/usac_map_theme.dart';
 
 class TurnByTurnBanner extends StatelessWidget {
   final CampusRoute route;
   final VoidCallback onClose;
   final UsacMapTheme theme;
+  final NavigationTrackingState? trackingState;
 
   const TurnByTurnBanner({
     super.key,
     required this.route,
     required this.onClose,
     this.theme = const UsacMapTheme(),
+    this.trackingState,
   });
 
   @override
   Widget build(BuildContext context) {
-    final firstStep = route.steps.isNotEmpty ? route.steps.first : null;
-    final instruction = firstStep?.instruction ?? 'Siga la ruta trazada';
+    final activeStep = trackingState?.currentStep ??
+        (route.steps.isNotEmpty ? route.steps.first : null);
+
+    final instruction = trackingState?.hasArrived == true
+        ? 'Ha llegado a su destino'
+        : (trackingState?.isOffRoute == true
+            ? 'Fuera de ruta. Recalculando...'
+            : (activeStep?.instruction ?? 'Siga la ruta trazada'));
+
+    final displayDistance = trackingState != null
+        ? trackingState!.remainingDistance
+        : route.totalDistance;
+
+    final displayMinutes = trackingState != null
+        ? (trackingState!.remainingDurationSeconds / 60.0).ceil()
+        : route.estimatedTimeMinutes.ceil();
 
     return SafeArea(
       top: true,
@@ -31,7 +48,8 @@ class TurnByTurnBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.0),
           color: theme.primaryColor,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Row(
               children: [
                 Container(
@@ -42,7 +60,7 @@ class TurnByTurnBanner extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _getStepIcon(firstStep?.type),
+                    _getStepIcon(activeStep?.type),
                     color: Colors.white,
                     size: 26.0,
                   ),
@@ -67,7 +85,7 @@ class TurnByTurnBanner extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            '${route.totalDistance.toStringAsFixed(0)} m',
+                            '${displayDistance.toStringAsFixed(0)} m',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13.0,
@@ -75,10 +93,11 @@ class TurnByTurnBanner extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8.0),
-                          const Text('•', style: TextStyle(color: Colors.white54)),
+                          const Text('•',
+                              style: TextStyle(color: Colors.white54)),
                           const SizedBox(width: 8.0),
                           Text(
-                            '~${route.estimatedTimeMinutes.ceil()} min',
+                            '~$displayMinutes min',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13.0,
@@ -86,7 +105,8 @@ class TurnByTurnBanner extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8.0),
-                          const Text('•', style: TextStyle(color: Colors.white54)),
+                          const Text('•',
+                              style: TextStyle(color: Colors.white54)),
                           const SizedBox(width: 8.0),
                           Text(
                             _getModeLabel(route.mode),

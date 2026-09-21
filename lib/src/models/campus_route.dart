@@ -15,6 +15,9 @@ class RouteStep {
     required this.type,
     required this.location,
   });
+
+  double get distanceMeters => distance;
+  LatLng get coordinate => location;
 }
 
 class CampusRoute {
@@ -35,6 +38,9 @@ class CampusRoute {
     required this.mode,
     this.steps = const [],
   });
+
+  List<LatLng> get polyline => points;
+  double get totalDistanceMeters => totalDistance;
 
   bool get hasStairs => edges.any((e) => e.type == 'stairs');
 

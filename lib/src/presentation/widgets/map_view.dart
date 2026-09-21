@@ -289,6 +289,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             child: TurnByTurnBanner(
               route: currentRoute,
               theme: widget.theme,
+              trackingState: _controller.navigationTrackingState,
               onClose: () {
                 _controller.clearRoute();
                 widget.onClearRoute?.call();
@@ -408,6 +409,16 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2.0),
                 ),
+                child: _controller.userHeading != null
+                    ? Transform.rotate(
+                        angle: (_controller.userHeading! * pi / 180.0),
+                        child: const Icon(
+                          Icons.navigation,
+                          color: Colors.white,
+                          size: 14.0,
+                        ),
+                      )
+                    : null,
               ),
             ),
           ),
