@@ -9,6 +9,8 @@ import '../../core/utils/distance_calculator.dart';
 import '../../models/campus_building.dart';
 import '../../models/campus_poi.dart';
 import '../../models/campus_route.dart';
+import '../../core/offline/offline_tile_package.dart';
+import '../offline/campus_offline_tile_provider.dart';
 import '../themes/usac_map_theme.dart';
 import 'floor_selector.dart';
 import 'poi_detail_sheet.dart';
@@ -237,6 +239,12 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             TileLayer(
               urlTemplate: widget.theme.tileUrlTemplate,
               userAgentPackageName: widget.theme.userAgentPackageName,
+              tileProvider: widget.theme.tileProvider ??
+                  (widget.theme.offlineOnly
+                      ? CampusOfflineTileProvider(
+                          package: OfflineTilePackage.usacCampusDefault(),
+                        )
+                      : null),
               maxZoom: 19,
             ),
             if (boundary.isNotEmpty)
