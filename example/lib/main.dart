@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide NavigationMode;
-import 'package:latlong2/latlong.dart';
 import 'package:usac_campus_map/usac_campus_map.dart';
 
 void main() {
@@ -54,7 +53,6 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
   void initState() {
     super.initState();
     _mapController.loadData();
-    _mapController.updateUserLocation(const LatLng(14.5878, -90.5528));
     _mapController.addListener(_onControllerChanged);
   }
 
