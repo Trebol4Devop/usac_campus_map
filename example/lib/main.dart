@@ -261,11 +261,22 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
     final buildings = _mapController.buildings;
     if (buildings.isEmpty) return;
 
-    CampusBuilding current = _mapController.selectedBuilding ??
-        buildings.firstWhere(
-          (b) => b.id == 't-3',
-          orElse: () => buildings.first,
-        );
+    final uniqueBuildings = <String, CampusBuilding>{};
+    for (final b in buildings) {
+      if (b.id.isNotEmpty && !uniqueBuildings.containsKey(b.id)) {
+        uniqueBuildings[b.id] = b;
+      }
+    }
+
+    if (uniqueBuildings.isEmpty) return;
+
+    final buildingList = uniqueBuildings.values.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+
+    CampusBuilding current = _mapController.selectedBuilding != null &&
+            uniqueBuildings.containsKey(_mapController.selectedBuilding!.id)
+        ? uniqueBuildings[_mapController.selectedBuilding!.id]!
+        : (uniqueBuildings['t-3'] ?? buildingList.first);
 
     showDialog<void>(
       context: context,
@@ -312,7 +323,7 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
                       child: DropdownButton<String>(
                         isExpanded: true,
                         value: current.id,
-                        items: buildings.take(30).map((b) {
+                        items: buildingList.map((b) {
                           final codeStr =
                               b.code.isNotEmpty ? '[${b.code}] ' : '';
                           return DropdownMenuItem(
@@ -324,10 +335,10 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
                           );
                         }).toList(),
                         onChanged: (newId) {
-                          if (newId != null) {
+                          if (newId != null &&
+                              uniqueBuildings.containsKey(newId)) {
                             setDialogState(() {
-                              current =
-                                  buildings.firstWhere((b) => b.id == newId);
+                              current = uniqueBuildings[newId]!;
                             });
                           }
                         },
