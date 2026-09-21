@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 class UsacMapTheme {
   final Color primaryColor;
@@ -16,6 +17,8 @@ class UsacMapTheme {
   final Color boundaryBorderColor;
   final String tileUrlTemplate;
   final String userAgentPackageName;
+  final bool offlineOnly;
+  final TileProvider? tileProvider;
 
   const UsacMapTheme({
     this.primaryColor = const Color(0xFF002B49),
@@ -33,6 +36,8 @@ class UsacMapTheme {
     this.boundaryBorderColor = const Color(0x40002B49),
     this.tileUrlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     this.userAgentPackageName = 'gt.edu.usac.campus_map',
+    this.offlineOnly = false,
+    this.tileProvider,
   });
 
   UsacMapTheme copyWith({
@@ -51,6 +56,8 @@ class UsacMapTheme {
     Color? boundaryBorderColor,
     String? tileUrlTemplate,
     String? userAgentPackageName,
+    bool? offlineOnly,
+    TileProvider? tileProvider,
   }) {
     return UsacMapTheme(
       primaryColor: primaryColor ?? this.primaryColor,
@@ -70,6 +77,8 @@ class UsacMapTheme {
       boundaryBorderColor: boundaryBorderColor ?? this.boundaryBorderColor,
       tileUrlTemplate: tileUrlTemplate ?? this.tileUrlTemplate,
       userAgentPackageName: userAgentPackageName ?? this.userAgentPackageName,
+      offlineOnly: offlineOnly ?? this.offlineOnly,
+      tileProvider: tileProvider ?? this.tileProvider,
     );
   }
 }
