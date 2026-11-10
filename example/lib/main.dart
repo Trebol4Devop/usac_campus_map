@@ -257,112 +257,6 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
     );
   }
 
-  void _showBuilding3DDialog() {
-    final buildings = _mapController.buildings;
-    if (buildings.isEmpty) return;
-
-    final uniqueBuildings = <String, CampusBuilding>{};
-    for (final b in buildings) {
-      if (b.id.isNotEmpty && !uniqueBuildings.containsKey(b.id)) {
-        uniqueBuildings[b.id] = b;
-      }
-    }
-
-    if (uniqueBuildings.isEmpty) return;
-
-    final buildingList = uniqueBuildings.values.toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
-
-    CampusBuilding current = _mapController.selectedBuilding != null &&
-            uniqueBuildings.containsKey(_mapController.selectedBuilding!.id)
-        ? uniqueBuildings[_mapController.selectedBuilding!.id]!
-        : (uniqueBuildings['t-3'] ?? buildingList.first);
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final model = Building3DModel.fromBuilding(current);
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              child: SizedBox(
-                width: 380.0,
-                height: 500.0,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.view_in_ar,
-                              color: Color(0xFF002B49)),
-                          const SizedBox(width: 8.0),
-                          const Expanded(
-                            child: Text(
-                              'Visor Volumétrico 3D',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0,
-                                color: Color(0xFF002B49),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.of(ctx).pop(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: current.id,
-                        items: buildingList.map((b) {
-                          final codeStr =
-                              b.code.isNotEmpty ? '[${b.code}] ' : '';
-                          return DropdownMenuItem(
-                            value: b.id,
-                            child: Text(
-                              '$codeStr${b.name}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (newId) {
-                          if (newId != null &&
-                              uniqueBuildings.containsKey(newId)) {
-                            setDialogState(() {
-                              current = uniqueBuildings[newId]!;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Building3DViewer(
-                          model: model,
-                          theme: const UsacMapTheme(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _showCommunityDialog() {
     final buildings = _mapController.buildings;
     if (buildings.isEmpty) return;
@@ -427,11 +321,6 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
             tooltip: 'Reseñas y Foro Comunitario',
             icon: const Icon(Icons.rate_review, color: Colors.white),
             onPressed: _showCommunityDialog,
-          ),
-          IconButton(
-            tooltip: 'Visor Volumétrico 3D',
-            icon: const Icon(Icons.view_in_ar, color: Colors.white),
-            onPressed: _showBuilding3DDialog,
           ),
           IconButton(
             tooltip: 'Trazar ruta entre edificios',

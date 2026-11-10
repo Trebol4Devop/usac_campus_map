@@ -290,7 +290,7 @@ CommunityForumView(
 ## 9. Ficha de Detalle Todo-en-Uno (`PoiDetailSheet`)
 
 `PoiDetailSheet` es la interfaz integral que unifica:
-1. **Pestaña Detalles:** Pisos, accesos peatonales, botones de trazado de ruta y botón de Modelo 3D.
+1. **Pestaña Detalles:** Pisos, accesos peatonales y botones de trazado de ruta multimodal.
 2. **Pestaña Reseñas:** Badge dinámico de la categoría, desglose de calificaciones, listado de opiniones y botón interactivo para calificar.
 3. **Pestaña Foro:** Hilo de discusión en vivo con caja de texto para enviar comentarios.
 
@@ -324,7 +324,6 @@ PoiDetailSheet.show(
 | `CommunityReviewsView` | Widget | Listado de reseñas con formulario modal interactivo. |
 | `CommunityForumView` | Widget | Foro con respuestas anidadas y soporte tombstone. |
 | `CampusCommunityRepository`| Servicio | Repositorio de reseñas y debates (aislado o singleton). |
-| `Building3DViewer` | Widget | Visor volumétrico 3D de huellas edilicias. |
 | `FloorSelector` | Widget | Selector flotante de niveles interiores (Sótano, 1, 2, ...). |
 | `TurnByTurnBanner` | Widget | Banner superior con guía direccional paso a paso. |
 | `NavigationMode` | Enum | Modos de ruteo: `pedestrian`, `accessible`, `covered`. |

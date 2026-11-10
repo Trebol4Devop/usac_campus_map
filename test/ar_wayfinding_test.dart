@@ -67,43 +67,7 @@ void main() {
     });
   });
 
-  group('Building3DModel geometric construction', () {
-    test('Constructs 3D volumetric model from CampusBuilding', () {
-      const building = CampusBuilding(
-        id: 'b-t3',
-        name: 'Edificio T-3',
-        code: 'T-3',
-        category: 'faculty',
-        center: userPos,
-        polygon: [
-          LatLng(14.5860, -90.5520),
-          LatLng(14.5862, -90.5520),
-          LatLng(14.5862, -90.5518),
-          LatLng(14.5860, -90.5518),
-        ],
-        floorsCount: 3,
-      );
-
-      final model = Building3DModel.fromBuilding(building, floorHeightMeters: 3.5);
-
-      expect(model.buildingId, equals('b-t3'));
-      expect(model.floors, equals(3));
-      expect(model.heightMeters, equals(10.5));
-      expect(model.wallFaces.length, equals(4));
-      expect(model.roofFace.vertices.length, equals(4));
-      expect(model.baseFace.vertices.length, equals(4));
-    });
-
-    test('Projects 3D vertices to isometric screen coordinates without error', () {
-      const v = Vector3D(10.0, 10.0, 5.0);
-      final offset = v.toIsometric(rotationAngle: 45.0, tiltAngle: 30.0, scale: 2.0);
-
-      expect(offset.dx.isFinite, isTrue);
-      expect(offset.dy.isFinite, isTrue);
-    });
-  });
-
-  group('AR and 3D Widgets Rendering', () {
+  group('AR Wayfinding Widgets Rendering', () {
     testWidgets('ArWayfindingView mounts and renders projection overlays', (tester) async {
       const waypoint = ArWaypoint(
         id: 't3',
@@ -138,41 +102,6 @@ void main() {
 
       expect(find.text('Edificio T-3'), findsOneWidget);
       expect(find.text('110 m'), findsOneWidget);
-    });
-
-    testWidgets('Building3DViewer mounts and paints 3D building canvas', (tester) async {
-      const building = CampusBuilding(
-        id: 'b-t3',
-        name: 'Edificio T-3',
-        code: 'T-3',
-        category: 'faculty',
-        center: userPos,
-        polygon: [
-          LatLng(14.5860, -90.5520),
-          LatLng(14.5862, -90.5520),
-          LatLng(14.5862, -90.5518),
-          LatLng(14.5860, -90.5518),
-        ],
-        floorsCount: 3,
-      );
-
-      final model = Building3DModel.fromBuilding(building);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: 300.0,
-              height: 300.0,
-              child: Building3DViewer(model: model),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('Edificio T-3'), findsOneWidget);
-      expect(find.text('3 niveles • 10.5 m de altura'), findsOneWidget);
-      expect(find.byType(CustomPaint), findsWidgets);
     });
   });
 }

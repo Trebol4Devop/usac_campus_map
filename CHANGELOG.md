@@ -4,6 +4,7 @@
 - Sistema de clasificación personalizable por categoría con rangos de evaluación, emojis y etiquetas (`RatingClassificationConfig`, `RatingClassificationBadge`).
 - Integración en `PoiDetailSheet` con navegación por pestañas (Detalles, Reseñas, Foro Comunitario).
 - Guía exhaustiva de implementación para aplicaciones cliente en `docs/guia_implementacion_cliente.md`.
+- Desacople y remoción de visualización volumétrica y modelos 3D a favor de renderizado vectorial 2D liviano y de alto rendimiento.
 
 ## 0.4.0
 

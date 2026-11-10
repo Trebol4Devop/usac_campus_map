@@ -36,7 +36,6 @@ class UsacCampusMapController extends ChangeNotifier {
   NavigationMode _navigationMode = NavigationMode.pedestrian;
   NavigationTrackingState? _navigationTrackingState;
   void Function(String prompt)? onVoicePrompt;
-  bool _is3DMode = false;
   bool _followUserHeading = false;
   CampusCommunityRepository _communityRepository =
       CampusCommunityRepository.instance;
@@ -73,25 +72,12 @@ class UsacCampusMapController extends ChangeNotifier {
   bool get isNavigating => _navigationEngine?.isNavigating ?? false;
   List<CampusBuilding> get buildings => repository.buildings;
   List<LatLng> get boundary => repository.boundary;
-  bool get is3DMode => _is3DMode;
   bool get followUserHeading => _followUserHeading;
   CampusCommunityRepository get communityRepository => _communityRepository;
 
   set communityRepository(CampusCommunityRepository repo) {
     _communityRepository = repo;
     notifyListeners();
-  }
-
-  void toggle3DMode() {
-    _is3DMode = !_is3DMode;
-    notifyListeners();
-  }
-
-  void set3DMode(bool enabled) {
-    if (_is3DMode != enabled) {
-      _is3DMode = enabled;
-      notifyListeners();
-    }
   }
 
   void setFollowUserHeading(bool follow) {

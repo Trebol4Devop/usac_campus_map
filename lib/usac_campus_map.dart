@@ -18,7 +18,6 @@ export 'src/engine/route_engine.dart';
 export 'src/engine/search_engine.dart';
 
 export 'src/models/ar_waypoint.dart';
-export 'src/models/building_3d_model.dart';
 export 'src/models/campus_building.dart';
 export 'src/models/campus_comment.dart';
 export 'src/models/campus_edge.dart';
@@ -34,7 +33,6 @@ export 'src/models/rating_classification.dart';
 export 'src/presentation/offline/campus_offline_tile_provider.dart';
 export 'src/presentation/themes/usac_map_theme.dart';
 export 'src/presentation/widgets/ar_wayfinding_view.dart';
-export 'src/presentation/widgets/building_3d_viewer.dart';
 export 'src/presentation/widgets/community_forum_view.dart';
 export 'src/presentation/widgets/community_reviews_view.dart';
 export 'src/presentation/widgets/floor_selector.dart';

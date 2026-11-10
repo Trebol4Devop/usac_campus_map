@@ -31,20 +31,7 @@ void main() {
     location: LatLng(14.5865, -90.5520),
   );
 
-  group('UsacCampusMapController Map 3D and Heading State', () {
-    test('Toggles 3D map mode correctly', () {
-      final controller = UsacCampusMapController();
-      expect(controller.is3DMode, isFalse);
-
-      controller.toggle3DMode();
-      expect(controller.is3DMode, isTrue);
-
-      controller.set3DMode(false);
-      expect(controller.is3DMode, isFalse);
-
-      controller.dispose();
-    });
-
+  group('UsacCampusMapController Heading State', () {
     test('Follows user heading state is configurable', () {
       final controller = UsacCampusMapController();
       expect(controller.followUserHeading, isFalse);

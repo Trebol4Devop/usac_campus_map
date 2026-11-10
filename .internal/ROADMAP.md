@@ -159,11 +159,9 @@ graph TD
 - Orientacion dinamica de flecha de rumbo del usuario segun brujula en `UsacCampusMap`.
 - Cobertura de pruebas unitarias en `test/realtime_navigation_test.dart`.
 
-### Fase 9: Mapeo Tridimensional y Realidad Aumentada (Completada)
+### Fase 9: Realidad Aumentada y Wayfinding (Completada)
 - `ArProjectionEngine`: Motor matematico de proyeccion visual en perspectiva para camara y realidad aumentada considerando rumbo, acimut, elevacion y campo de vision (FOV).
 - `ArWaypoint` y `ArProjectionResult`: Modelos de objetivos espaciales proyectados y coordenadas de pantalla con indicadores de borde.
-- `Building3DModel`: Extrusion volumetrica tridimensional de huellas arquitectonicas de edificios segun numero de niveles y alturas de piso.
 - `ArWayfindingView`: Widget de superposicion visual para navegacion AR sobre camara.
-- `Building3DViewer`: Visor interactivo 3D con rotacion, inclinacion y escala mediante gestos tactiles.
-- Cobertura de pruebas unitarias y de widgets en `test/ar_and_3d_test.dart`.
+- Cobertura de pruebas unitarias y de widgets en `test/ar_wayfinding_test.dart`.
 
