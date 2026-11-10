@@ -363,26 +363,24 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
     );
   }
 
-  void _startWalking3DMode() {
+  void _showCommunityDialog() {
     final buildings = _mapController.buildings;
     if (buildings.isEmpty) return;
 
-    if (_mapController.currentRoute == null) {
-      final origin = buildings.firstWhere(
-        (b) => b.id == 't-3',
-        orElse: () => buildings.first,
-      );
-      final dest = buildings.firstWhere(
-        (b) => b.id == 'biblio-central',
-        orElse: () => buildings.length > 1 ? buildings[1] : buildings.first,
-      );
-      _mapController.startRouteBetweenBuildings(
-        origin: origin,
-        destination: dest,
-        mode: _activeMode,
-      );
-    }
-    _mapController.open3DWalkingView();
+    final target = _mapController.selectedBuilding ??
+        buildings.firstWhere(
+          (b) => b.id == 't-3',
+          orElse: () => buildings.first,
+        );
+
+    PoiDetailSheet.show(
+      context: context,
+      building: target,
+      currentFloor: _mapController.selectedFloor,
+      userLocation: _mapController.userLocation,
+      communityRepository: _mapController.communityRepository,
+      initialTabIndex: 1,
+    );
   }
 
   @override
@@ -426,9 +424,9 @@ class _CampusMapHomePageState extends State<CampusMapHomePage> {
             },
           ),
           IconButton(
-            tooltip: 'Vista 3D Caminar entre Edificios',
-            icon: const Icon(Icons.streetview, color: Colors.white),
-            onPressed: _startWalking3DMode,
+            tooltip: 'Reseñas y Foro Comunitario',
+            icon: const Icon(Icons.rate_review, color: Colors.white),
+            onPressed: _showCommunityDialog,
           ),
           IconButton(
             tooltip: 'Visor Volumétrico 3D',

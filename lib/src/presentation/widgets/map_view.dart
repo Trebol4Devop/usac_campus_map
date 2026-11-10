@@ -13,7 +13,6 @@ import '../../models/campus_route.dart';
 import '../../core/offline/offline_tile_package.dart';
 import '../offline/campus_offline_tile_provider.dart';
 import '../themes/usac_map_theme.dart';
-import 'campus_walk_3d_view.dart';
 import 'floor_selector.dart';
 import 'poi_detail_sheet.dart';
 import 'turn_by_turn_banner.dart';
@@ -151,6 +150,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
       currentFloor: _controller.selectedFloor,
       userLocation: _controller.userLocation,
       theme: widget.theme,
+      communityRepository: _controller.communityRepository,
       onNavigate: (mode) async {
         Navigator.of(context).pop();
         var userLoc = _controller.userLocation;
@@ -288,9 +288,6 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
               route: currentRoute,
               theme: widget.theme,
               trackingState: _controller.navigationTrackingState,
-              onToggle3DWalk: () {
-                _controller.open3DWalkingView();
-              },
               onClose: () {
                 _controller.clearRoute();
                 widget.onClearRoute?.call();
@@ -317,22 +314,6 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (currentRoute != null) ...[
-                  FloatingActionButton.extended(
-                    heroTag: 'fab_usac_walk_3d',
-                    backgroundColor: widget.theme.accentColor,
-                    foregroundColor: Colors.black,
-                    onPressed: () {
-                      _controller.open3DWalkingView();
-                    },
-                    icon: const Icon(Icons.view_in_ar),
-                    label: const Text(
-                      'Caminar 3D',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                ],
                 FloatingActionButton.small(
                   heroTag: 'fab_usac_3d',
                   backgroundColor: _controller.is3DMode
@@ -377,23 +358,6 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                   child: const Icon(Icons.my_location),
                 ),
               ],
-            ),
-          ),
-        if (_controller.is3DWalkingViewOpen && currentRoute != null)
-          Positioned.fill(
-            child: CampusWalk3DView(
-              route: currentRoute,
-              buildings: effectiveBuildings,
-              initialLocation: _controller.userLocation,
-              initialHeading: _controller.userHeading,
-              theme: widget.theme,
-              trackingState: _controller.navigationTrackingState,
-              onClose: () {
-                _controller.close3DWalkingView();
-              },
-              onLocationChanged: (loc) {
-                _controller.updateUserLocation(loc);
-              },
             ),
           ),
       ],
@@ -535,6 +499,7 @@ class _UsacCampusMapState extends State<UsacCampusMap> {
                   currentFloor: _controller.selectedFloor,
                   userLocation: _controller.userLocation,
                   theme: widget.theme,
+                  communityRepository: _controller.communityRepository,
                 );
               },
               child: Container(

@@ -54,6 +54,9 @@ Para solucionar esto, `usac_campus_map` empaqueta la cartografia vectorial, la t
 - **Buscador Instantaneo en Memoria:** Consultas difusas por codigo de edificio (ej. "T-3", "S-12", "M-1"), nombre comun, facultad o servicios disponibles con ponderacion de relevancia.
 - **Soporte de Navegacion Interior (Indoor Mapping):** Desglose por niveles (Nivel 1, Nivel 2, Sótano, etc.), permitiendo conmutar la visibilidad de aulas y laboratorios internos.
 - **Puntos de Acceso Oficiales (Garitas):** Localizacion y ruteo hacia las garitas principales (Periferico, Avenida Petapa y Las Charcas) como nodos integrados a la red de transporte.
+- **Calificaciones y Reseñas Personalizables:** Esquemas abiertos de clasificación por categoría (`RatingClassificationConfig`) con niveles, emojis, umbrales y etiquetas de condiciones configurables por el cliente.
+- **Foro Comunitario y Respuestas en Vivo:** Discusión estudiantil con hilos anidados, pseudónimos protegidos y soporte tombstone para moderación.
+- **Guía Completa de Integración:** Documentación paso a paso para la aplicación cliente en [docs/guia_implementacion_cliente.md](docs/guia_implementacion_cliente.md).
 - **Desacoplamiento Visual:** Arquitectura orientada a controlador que separa la logica espacial del arbol de renderizado de Flutter.
 
 ---

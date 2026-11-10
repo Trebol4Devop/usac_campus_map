@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../engine/campus_community_repository.dart';
 import '../engine/campus_data_repository.dart';
 import '../engine/realtime_navigation_engine.dart';
 import '../engine/route_engine.dart';
@@ -36,15 +37,19 @@ class UsacCampusMapController extends ChangeNotifier {
   NavigationTrackingState? _navigationTrackingState;
   void Function(String prompt)? onVoicePrompt;
   bool _is3DMode = false;
-  bool _is3DWalkingViewOpen = false;
   bool _followUserHeading = false;
+  CampusCommunityRepository _communityRepository =
+      CampusCommunityRepository.instance;
 
   UsacCampusMapController({
     CampusDataRepository? repository,
     MapController? mapController,
     this.onVoicePrompt,
+    CampusCommunityRepository? communityRepository,
   })  : repository = repository ?? CampusDataRepository(),
-        mapController = mapController ?? MapController() {
+        mapController = mapController ?? MapController(),
+        _communityRepository =
+            communityRepository ?? CampusCommunityRepository.instance {
     _routeEngine = RouteEngine(repository: this.repository);
     _searchEngine = SearchEngine(repository: this.repository);
   }
@@ -69,8 +74,13 @@ class UsacCampusMapController extends ChangeNotifier {
   List<CampusBuilding> get buildings => repository.buildings;
   List<LatLng> get boundary => repository.boundary;
   bool get is3DMode => _is3DMode;
-  bool get is3DWalkingViewOpen => _is3DWalkingViewOpen;
   bool get followUserHeading => _followUserHeading;
+  CampusCommunityRepository get communityRepository => _communityRepository;
+
+  set communityRepository(CampusCommunityRepository repo) {
+    _communityRepository = repo;
+    notifyListeners();
+  }
 
   void toggle3DMode() {
     _is3DMode = !_is3DMode;
@@ -82,26 +92,6 @@ class UsacCampusMapController extends ChangeNotifier {
       _is3DMode = enabled;
       notifyListeners();
     }
-  }
-
-  void toggle3DWalkingView() {
-    _is3DWalkingViewOpen = !_is3DWalkingViewOpen;
-    notifyListeners();
-  }
-
-  void set3DWalkingViewOpen(bool open) {
-    if (_is3DWalkingViewOpen != open) {
-      _is3DWalkingViewOpen = open;
-      notifyListeners();
-    }
-  }
-
-  void open3DWalkingView() {
-    set3DWalkingViewOpen(true);
-  }
-
-  void close3DWalkingView() {
-    set3DWalkingViewOpen(false);
   }
 
   void setFollowUserHeading(bool follow) {

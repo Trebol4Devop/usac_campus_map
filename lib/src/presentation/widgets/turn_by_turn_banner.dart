@@ -7,7 +7,6 @@ import '../themes/usac_map_theme.dart';
 class TurnByTurnBanner extends StatelessWidget {
   final CampusRoute route;
   final VoidCallback onClose;
-  final VoidCallback? onToggle3DWalk;
   final UsacMapTheme theme;
   final NavigationTrackingState? trackingState;
 
@@ -15,7 +14,6 @@ class TurnByTurnBanner extends StatelessWidget {
     super.key,
     required this.route,
     required this.onClose,
-    this.onToggle3DWalk,
     this.theme = const UsacMapTheme(),
     this.trackingState,
   });
@@ -123,12 +121,6 @@ class TurnByTurnBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (onToggle3DWalk != null)
-                  IconButton(
-                    icon: const Icon(Icons.view_in_ar, color: Colors.white),
-                    tooltip: 'Vista Caminar 3D',
-                    onPressed: onToggle3DWalk,
-                  ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white70),
                   onPressed: onClose,

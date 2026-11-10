@@ -1,3 +1,10 @@
+## 0.5.0
+
+- Sistema de comunidad estudiantil: reseñas, calificaciones y foro de discusión por edificio y POI (`CampusCommunityRepository`, `CampusReview`, `CampusComment`).
+- Sistema de clasificación personalizable por categoría con rangos de evaluación, emojis y etiquetas (`RatingClassificationConfig`, `RatingClassificationBadge`).
+- Integración en `PoiDetailSheet` con navegación por pestañas (Detalles, Reseñas, Foro Comunitario).
+- Guía exhaustiva de implementación para aplicaciones cliente en `docs/guia_implementacion_cliente.md`.
+
 ## 0.4.0
 
 - Fase 9: Implementacion de motor de proyeccion visual para Realidad Aumentada (ArProjectionEngine) con evaluacion de campo de vision (FOV), rumbo y elevacion.

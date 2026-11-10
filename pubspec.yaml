@@ -1,6 +1,6 @@
 name: usac_campus_map
 description: Librería privada de mapa y geolocalización para el campus central de la USAC.
-version: 0.0.1
+version: 0.5.0
 publish_to: 'none'
 
 environment:
