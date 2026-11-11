@@ -1,7 +1,8 @@
 name: usac_campus_map
-description: Librería privada de mapa y geolocalización para el campus central de la USAC.
-version: 0.5.0
-publish_to: 'none'
+description: Librería interactiva de mapa y geolocalización para el campus central de la Universidad de San Carlos de Guatemala (USAC).
+version: 0.5.1
+repository: https://github.com/Trebol4Devop/usac_campus_map
+issue_tracker: https://github.com/Trebol4Devop/usac_campus_map/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

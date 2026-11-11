@@ -1,0 +1,4 @@
+.internal/
+.dart_tool/
+.github/
+.vscode/
