@@ -1,3 +1,12 @@
+## 0.5.1
+
+- Rediseño moderno de interfaz en aplicación de ejemplo (`example/lib/main.dart`):
+  - Mapa a pantalla completa (full-bleed) sin AppBar invasivo.
+  - Barra de búsqueda flotante Material 3 con soporte para alias sancarlistas y accesos rápidos a reseñas y rutas.
+  - Fila horizontal de chips con iconos temáticos para filtrado ágil por categoría.
+  - Planificador de rutas interactivo con selector de origen/destino, inversión de trayecto y cálculo de tiempo estimado (ETA) en minutos y distancia en metros.
+  - Tarjeta de ruta en curso con botón de finalización.
+
 ## 0.5.0
 
 - Sistema de comunidad estudiantil: reseñas, calificaciones y foro de discusión por edificio y POI (`CampusCommunityRepository`, `CampusReview`, `CampusComment`).

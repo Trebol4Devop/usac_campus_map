@@ -1,0 +1,19 @@
+# Build artifacts
+/build/
+**/build/
+.dart_tool/
+**/.dart_tool/
+
+# Internal & Private
+.internal/
+CONTEXT.md
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Logs & temp
+*.log
+*.class
+.DS_Store
